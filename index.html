@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cronograma de Projetos</title>
   
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏗️</text></svg>">
+  <link rel="icon" type="image/png" href="icone.png">
 
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -13,32 +13,33 @@
   <style>
     * { font-family: 'Space Grotesk', sans-serif; }
     
-    ::-webkit-scrollbar { height: 8px; width: 8px; }
-    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    ::-webkit-scrollbar { height: 10px; width: 10px; }
+    ::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; border: 2px solid #0f172a; }
     ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     
-    .gantt-bar { transition: all 0.3s ease; z-index: 10; cursor: pointer; }
-    .gantt-bar:hover { filter: brightness(1.2); z-index: 20; transform: scaleY(1.05); }
+    .gantt-bar { transition: all 0.3s ease; z-index: 20; cursor: pointer; }
+    .gantt-bar:hover { filter: brightness(1.2); transform: scaleY(1.05); z-index: 30; }
     
     .milestone-icon {
         position: absolute; top: 25px; transform: translate(-50%, -50%);
-        font-size: 16px; z-index: 15; cursor: pointer;
+        font-size: 16px; z-index: 40; cursor: pointer;
         filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
         transition: transform 0.2s;
         display: flex; align-items: center; justify-content: center;
         width: 24px; height: 24px;
     }
-    .milestone-icon:hover { transform: translate(-50%, -50%) scale(1.3); z-index: 30; }
+    .milestone-icon:hover { transform: translate(-50%, -50%) scale(1.3); z-index: 50; }
 
-    .sticky-col { position: sticky; left: 0; z-index: 50; background-color: #0f172a; border-right: 1px solid #334155; }
-    .sticky-header { position: sticky; top: 0; z-index: 40; background-color: #1e293b; }
+    .sticky-col { position: sticky; left: 0; z-index: 60; background-color: #0f172a; border-right: 1px solid #334155; }
+    .sticky-header { position: sticky; top: 0; z-index: 55; background-color: #1e293b; }
     
     .critical-period-overlay {
         position: absolute; top: 40px; bottom: 0;
-        background: repeating-linear-gradient(45deg, rgba(220, 38, 38, 0.1), rgba(220, 38, 38, 0.1) 10px, rgba(220, 38, 38, 0.15) 10px, rgba(220, 38, 38, 0.15) 20px);
+        background: repeating-linear-gradient(45deg, rgba(220, 38, 38, 0.2), rgba(220, 38, 38, 0.2) 10px, rgba(220, 38, 38, 0.25) 10px, rgba(220, 38, 38, 0.25) 20px);
         border-left: 2px dashed #ef4444; border-right: 2px dashed #ef4444;
         pointer-events: none; z-index: 35;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
     }
     
     input[type=range].zoom-slider { -webkit-appearance: none; background: transparent; }
@@ -79,26 +80,19 @@
     .dash-card {
         background: rgba(30, 41, 59, 0.6);
         border: 1px solid rgba(71, 85, 105, 0.5);
-        border-radius: 12px;
-        padding: 16px;
-        position: relative;
-        overflow: hidden;
+        border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
     }
     .dash-card::before {
-        content: '';
-        position: absolute;
-        left: 0; top: 0; bottom: 0;
-        width: 4px;
-        background: var(--card-color, #6366f1);
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--card-color, #6366f1);
     }
   </style>
  </head>
- <body class="h-full bg-slate-900 text-slate-100 overflow-auto">
+ <body class="h-full bg-slate-900 text-slate-100 overflow-hidden">
 
-  <div id="app" class="w-full h-full flex flex-col p-6">
-   <header class="mb-6 flex justify-between items-center">
+  <div id="app" class="w-full h-full flex flex-col p-6 overflow-hidden">
+   <header class="mb-4 flex justify-between items-center flex-shrink-0">
     <div class="flex items-center gap-4">
-     <img id="company-logo" src="https://placehold.co/100x100/6366f1/ffffff?text=LOGO" alt="Logo" class="w-14 h-14 rounded-lg object-cover bg-slate-800 border border-slate-700">
+     <img id="company-logo" src="logo.png" alt="Logo" class="w-14 h-14 rounded-lg object-cover bg-slate-800 border border-slate-700">
      
      <div>
       <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Cronograma de Projetos</h1>
@@ -119,14 +113,14 @@
     </div>
    </header>
    
-   <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1">
-    <div class="lg:col-span-1 bg-slate-800/50 rounded-xl border border-slate-700 p-6 h-fit max-h-full overflow-y-auto flex flex-col">
+   <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1 min-h-0">
+    <div class="lg:col-span-1 bg-slate-800/50 rounded-xl border border-slate-700 p-6 flex flex-col min-h-0 h-full">
      <div class="flex gap-2 mb-4 flex-shrink-0">
         <button id="tab-tasks" class="tab-btn active flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wide rounded">Empreendimentos</button> 
         <button id="tab-milestones" class="tab-btn inactive flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wide rounded">Marcos</button>
      </div>
      
-     <div id="tasks-section" class="border-b border-slate-700 pb-4 mb-4">
+     <div id="tasks-section" class="border-b border-slate-700 pb-4 mb-4 flex-shrink-0">
       <h2 id="task-form-title" class="text-sm font-bold text-indigo-400 mb-3">➕ Novo Empreendimento</h2>
       <form id="task-form" class="space-y-3">
        <div><input type="text" id="task-name" placeholder="Nome do Empreendimento" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-xs"></div>
@@ -138,7 +132,7 @@
       </form>
      </div>
      
-     <div id="milestones-section" class="hidden border-b border-slate-700 pb-4 mb-4">
+     <div id="milestones-section" class="hidden border-b border-slate-700 pb-4 mb-4 flex-shrink-0">
       <h2 id="milestone-form-title" class="text-sm font-bold text-purple-400 mb-3">📍 Definir Datas</h2>
       <form id="milestone-form" class="space-y-3">
        <select id="milestone-task" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-xs"> <option value="">Selecione...</option> </select>
@@ -155,7 +149,7 @@
       </form>
      </div>
      
-     <div class="flex-1 overflow-y-auto">
+     <div class="flex-1 overflow-y-auto pr-1 custom-scroll">
        <div class="flex justify-between items-center mb-2 px-1">
            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Empreendimentos</h3>
            <div class="flex gap-2">
@@ -167,13 +161,13 @@
      </div>
      
      <div class="mt-4 pt-2 border-t border-slate-700 text-center flex-shrink-0">
-         <button onclick="clearAllData()" class="text-[10px] text-slate-500 hover:text-red-400 underline">Apagar Tudo (Reset)</button>
+         <button onclick="clearAllData()" class="text-[10px] text-slate-500 hover:text-red-400 underline">Apagar Tudo</button>
      </div>
     </div>
 
-    <div class="lg:col-span-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-full" id="chart-dashboard-container">
-     <div class="lg:col-span-3 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
-      <div class="flex flex-wrap gap-2 p-3 border-b border-slate-700 bg-slate-800/30 items-center">
+    <div class="lg:col-span-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-full min-h-0" id="chart-dashboard-container">
+     <div id="chart-section" class="lg:col-span-3 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col h-full min-h-0">
+      <div class="flex flex-wrap gap-2 p-3 border-b border-slate-700 bg-slate-800/30 items-center flex-shrink-0">
           <button id="view-months" class="view-btn active px-3 py-1 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-indigo-500"> 📅 Calendário </button> 
           <button id="view-elapsed" class="view-btn px-3 py-1 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-indigo-500"> 🔢 Meses Corridos </button>
           
@@ -191,8 +185,8 @@
            </button>
       </div>
       
-      <div id="gantt-chart-wrapper" class="flex-1 overflow-auto relative bg-slate-900">
-         <div id="gantt-chart" class="min-h-full">
+      <div id="gantt-chart-wrapper" class="flex-1 overflow-auto relative bg-slate-900 w-full">
+         <div id="gantt-chart" class="min-h-full min-w-full">
             <div class="flex items-center justify-center h-full text-slate-400 text-sm mt-10">
                 <p>Carregando dados da nuvem...</p>
             </div>
@@ -200,8 +194,8 @@
       </div>
      </div>
      
-     <div id="dashboard-panel" class="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
-      <div class="p-3 border-b border-slate-700 bg-slate-800/30">
+     <div id="dashboard-panel" class="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col h-full min-h-0">
+      <div class="p-3 border-b border-slate-700 bg-slate-800/30 flex-shrink-0">
        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider">📊 Estatísticas</h3>
       </div>
       <div id="dashboard" class="flex-1 overflow-y-auto p-4 space-y-4">
@@ -213,7 +207,6 @@
   </div>
 
   <script>
-    // --- CREDENCIAIS ---
     const BIN_ID = '699311bf43b1c97be9836b2f';
     const API_KEY = '$2a$10$T3C70qhYrKZMczxOir2xUeypvmxIZ89FRuioGyxBSh/gZorc4iBAy';
 
@@ -224,7 +217,6 @@
       primary_action: '#6366f1'
     };
     
-    // --- Estado Global ---
     let tasks = [];
     let milestones = [];
     let viewMode = 'months';
@@ -237,21 +229,25 @@
     let expandedGroups = new Set();
     let draggedItem = null;
 
-    const barColors = [
-      '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
-      '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'
-    ];
-
-    const MILESTONE_TYPES = {
-        'Início do projeto': { icon: '📂', order: 1 },
-        'Entrega do projeto': { icon: '🏁', order: 2 },
-        'Início da obra': { icon: '🏗️', order: 3 }
-    };
-    
+    const barColors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
+    const MILESTONE_TYPES = { 'Início do projeto': { icon: '📂', order: 1 }, 'Entrega do projeto': { icon: '🏁', order: 2 }, 'Início da obra': { icon: '🏗️', order: 3 } };
     const MILESTONE_SEQUENCE = ['Início do projeto', 'Entrega do projeto', 'Início da obra'];
 
-    // --- Integração Online (Nuvem) ---
-    
+    // Correção: Função de data robusta que suporta objetos e strings e fallbacks
+    function parseDateSafe(dateStr) {
+        if(!dateStr) return null;
+        let d;
+        // Tenta formato YYYY-MM-DD direto
+        if(typeof dateStr === 'string' && dateStr.includes('-') && dateStr.length === 10) {
+            const parts = dateStr.split('-');
+            return { y: parseInt(parts[0]), m: parseInt(parts[1]) - 1, d: parseInt(parts[2]) };
+        }
+        // Fallback para Date object
+        d = new Date(dateStr);
+        if(isNaN(d.getTime())) return null;
+        return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() };
+    }
+
     async function loadData() {
         const container = document.getElementById('gantt-chart');
         container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm mt-10"><p>🔄 Conectando ao servidor...</p></div>';
@@ -259,28 +255,26 @@
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                 headers: { 
-                    'X-Master-Key': API_KEY
+                    'X-Master-Key': API_KEY,
+                    'X-Bin-Meta': 'false' // Importante para evitar wrapper excessivo
                 }
             });
-            
             if (response.ok) {
                 const data = await response.json();
-                // Verifica se os dados estão dentro de "record" (padrão v3) ou soltos
+                // Suporte para ambos os formatos (com/sem record, com/sem tarefas antigas)
                 const record = data.record || data;
-                tasks = record.tasks || [];
+                tasks = record.tasks || record.empreendimentos || [];
                 milestones = record.milestones || [];
             } else {
-                console.warn('Bin não encontrado ou erro, iniciando vazio.');
-                tasks = [];
-                milestones = [];
+                console.warn('Status:', response.status);
+                tasks = []; milestones = [];
             }
         } catch (e) {
-            alert('Erro de conexão com a nuvem: ' + e.message);
-            tasks = [];
-            milestones = [];
+            console.error(e);
+            alert("Erro ao conectar com a nuvem.");
+            tasks = []; milestones = [];
         }
         
-        // Expandir todos por padrão
         tasks.forEach(t => expandedGroups.add(t.id));
         refreshAll();
     }
@@ -288,183 +282,54 @@
     async function saveData() {
         const statusEl = document.getElementById('sync-status');
         if(statusEl) statusEl.textContent = "☁️ Salvando...";
-        
         try {
             await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                 method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': API_KEY
-                },
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
                 body: JSON.stringify({ tasks, milestones })
             });
-            
-            if(statusEl) {
-                statusEl.textContent = "✅ Salvo";
-                setTimeout(() => statusEl.textContent = "", 3000);
-            }
-        } catch (e) {
-            console.error(e);
-            if(statusEl) statusEl.textContent = "❌ Erro ao salvar";
-            alert('Falha ao salvar na nuvem.');
-        }
+            if(statusEl) { statusEl.textContent = "✅ Salvo"; setTimeout(() => statusEl.textContent = "", 3000); }
+        } catch (e) { if(statusEl) statusEl.textContent = "❌ Erro"; }
     }
 
     async function clearAllData() {
-        if(confirm("Deseja apagar todos os dados da nuvem? Isso não pode ser desfeito.")) {
-            tasks = [];
-            milestones = [];
-            await saveData();
-            refreshAll();
+        if(confirm("Deseja apagar todos os dados da nuvem?")) {
+            tasks = []; milestones = []; await saveData(); refreshAll();
         }
     }
 
-    function refreshAll() {
-        updateUnifiedList();
-        refreshTaskSelectOptions(); 
-        renderGantt();
-        updateDashboard();
-    }
+    function refreshAll() { updateUnifiedList(); refreshTaskSelectOptions(); renderGantt(); updateDashboard(); }
 
-    // --- Lista Lateral Unificada (Drag, Toggle, Edit, Progress) ---
+    // UI Updates
     function updateUnifiedList() {
         const list = document.getElementById('unified-list');
-        if (tasks.length === 0) {
-            list.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 italic">Nenhum empreendimento cadastrado.</p>';
-            return;
-        }
-
+        if (tasks.length === 0) { list.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Vazio</p>'; return; }
         let html = '';
         tasks.forEach((t, index) => {
             const tMs = milestones.filter(m => m.tarefa_id === t.id);
             const isExpanded = expandedGroups.has(t.id);
             const isHidden = t.visivel === false;
-            
             tMs.sort((a,b) => (MILESTONE_TYPES[a.tarefa]?.order || 99) - (MILESTONE_TYPES[b.tarefa]?.order || 99));
-
-            html += `
-                <div class="mb-2 border border-slate-700 rounded bg-slate-800/30 overflow-hidden ${editingTaskId === t.id ? 'editing-border' : ''}" 
-                     draggable="true" ondragstart="dragStart(event, ${index})" ondragover="dragOver(event)" ondrop="drop(event, ${index})">
-                    
-                    <div class="p-2 bg-slate-700/50 flex flex-col gap-2 group hover:bg-slate-700 transition-colors">
-                        
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-2 flex-1 cursor-pointer" onclick="toggleGroup('${t.id}')">
-                                <span class="drag-handle text-slate-500 cursor-grab px-1">⋮⋮</span>
-                                <span class="text-[10px] text-slate-400 transform transition-transform ${isExpanded ? 'rotate-90' : ''}">▶</span>
-                                <div class="flex flex-col">
-                                    <span class="font-bold ${isHidden ? 'text-slate-500 line-through' : 'text-indigo-300'} text-xs truncate max-w-[120px]" title="${t.tarefa}">${t.tarefa}</span>
-                                    ${t.tags ? `<span class="text-[9px] text-slate-500 truncate max-w-[120px]">${t.tags}</span>` : ''}
-                                </div>
-                            </div>
-                            
-                            <div class="flex gap-1">
-                                <button onclick="toggleVisibility('${t.id}')" class="p-1 px-2 rounded bg-slate-600/50 hover:bg-slate-500 text-slate-300 text-[10px]" title="${isHidden ? 'Exibir' : 'Ocultar'}">
-                                    ${isHidden ? '👁️‍🗨️' : '👁️'}
-                                </button>
-                                <button onclick="editTask('${t.id}')" class="p-1 px-2 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px]" title="Editar">✏️</button>
-                                <button onclick="deleteTask('${t.id}')" class="p-1 px-2 rounded bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-[10px]" title="Excluir">✕</button>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 px-1">
-                            <input type="range" class="progress-slider flex-1" min="0" max="100" value="${t.progresso || 0}" 
-                                   oninput="updateProgress('${t.id}', this.value)" title="Progresso: ${t.progresso || 0}%">
-                            <span class="text-[10px] font-mono text-slate-300 w-8 text-right">${t.progresso || 0}%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-content ${isExpanded ? '' : 'collapsed'} bg-slate-900/30">
-                        ${tMs.length === 0 ? '<p class="text-[9px] text-slate-600 p-2 pl-8 italic">Sem marcos</p>' : ''}
-                        ${tMs.map(m => {
-                             const icon = MILESTONE_TYPES[m.tarefa]?.icon || '📍';
-                             const dateBr = m.data_prevista.split('-').reverse().join('/');
-                             const isMEdit = editingMilestoneId === m.id;
-                             return `
-                                <div class="py-1 px-2 pl-8 border-t border-slate-700/30 flex justify-between items-center hover:bg-slate-800/50 group ${isMEdit ? 'bg-amber-900/20' : ''}">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs grayscale opacity-70">${icon}</span>
-                                        <div class="flex flex-col">
-                                            <span class="text-[9px] text-slate-400">${m.tarefa}</span>
-                                            <span class="text-[10px] font-mono text-slate-200">${dateBr}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="editMilestone('${m.id}')" class="text-[10px] text-blue-400 hover:text-white px-1">✏️</button>
-                                        <button onclick="deleteMilestone('${m.id}')" class="text-[10px] text-red-400 hover:text-white px-1">✕</button>
-                                    </div>
-                                </div>
-                             `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
+            html += `<div class="mb-2 border border-slate-700 rounded bg-slate-800/30 overflow-hidden ${editingTaskId === t.id ? 'editing-border' : ''}" draggable="true" ondragstart="dragStart(event, ${index})" ondragover="dragOver(event)" ondrop="drop(event, ${index})"><div class="p-2 bg-slate-700/50 flex flex-col gap-2 group hover:bg-slate-700 transition-colors"><div class="flex justify-between items-center"><div class="flex items-center gap-2 flex-1 cursor-pointer" onclick="toggleGroup('${t.id}')"><span class="drag-handle text-slate-500 cursor-grab px-1">⋮⋮</span><span class="text-[10px] text-slate-400 transform transition-transform ${isExpanded ? 'rotate-90' : ''}">▶</span><div class="flex flex-col"><span class="font-bold ${isHidden ? 'text-slate-500 line-through' : 'text-indigo-300'} text-xs truncate max-w-[120px]">${t.tarefa}</span>${t.tags ? `<span class="text-[9px] text-slate-500 truncate max-w-[120px]">${t.tags}</span>` : ''}</div></div><div class="flex gap-1"><button onclick="toggleVisibility('${t.id}')" class="p-1 px-2 rounded bg-slate-600/50 hover:bg-slate-500 text-slate-300 text-[10px]">${isHidden ? '👁️‍🗨️' : '👁️'}</button><button onclick="editTask('${t.id}')" class="p-1 px-2 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px]">✏️</button><button onclick="deleteTask('${t.id}')" class="p-1 px-2 rounded bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-[10px]">✕</button></div></div><div class="flex items-center gap-2 px-1"><input type="range" class="progress-slider flex-1" min="0" max="100" value="${t.progresso || 0}" oninput="updateProgress('${t.id}', this.value)"><span class="text-[10px] font-mono text-slate-300 w-8 text-right">${t.progresso || 0}%</span></div></div><div class="accordion-content ${isExpanded ? '' : 'collapsed'} bg-slate-900/30">${tMs.map(m => { const icon = MILESTONE_TYPES[m.tarefa]?.icon || '📍'; const dateBr = m.data_prevista.split('-').reverse().join('/'); return `<div class="py-1 px-2 pl-8 border-t border-slate-700/30 flex justify-between items-center hover:bg-slate-800/50 group"><div class="flex items-center gap-2"><span class="text-xs grayscale opacity-70">${icon}</span><div class="flex flex-col"><span class="text-[9px] text-slate-400">${m.tarefa}</span><span class="text-[10px] font-mono text-slate-200">${dateBr}</span></div></div><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editMilestone('${m.id}')" class="text-[10px] text-blue-400 hover:text-white px-1">✏️</button><button onclick="deleteMilestone('${m.id}')" class="text-[10px] text-red-400 hover:text-white px-1">✕</button></div></div>`; }).join('')}</div></div>`;
         });
-        
         list.innerHTML = html;
     }
 
-    function updateProgress(id, val) {
-        const task = tasks.find(t => t.id === id);
-        if(task) {
-            task.progresso = parseInt(val);
-            renderGantt();
-            updateDashboard();
-            const span = document.querySelector(`input[oninput="updateProgress('${id}', this.value)"] + span`);
-            if(span) span.textContent = val + "%";
-        }
-    }
-    
-    document.addEventListener('change', (e) => {
-        if(e.target.classList.contains('progress-slider')) {
-            saveData();
-        }
-    });
+    function updateProgress(id, val) { const t=tasks.find(x=>x.id===id); if(t){t.progresso=parseInt(val); renderGantt(); updateDashboard(); const s=document.querySelector(`input[oninput="updateProgress('${id}', this.value)"] + span`); if(s) s.textContent=val+"%"; }}
+    function dragStart(e, i) { draggedItem = i; e.dataTransfer.effectAllowed = 'move'; }
+    function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+    function drop(e, i) { e.preventDefault(); if (draggedItem !== i) { const item = tasks.splice(draggedItem, 1)[0]; tasks.splice(i, 0, item); saveData(); refreshAll(); } }
+    function toggleVisibility(id) { const t=tasks.find(x=>x.id===id); if(t){t.visivel=!t.visivel; saveData(); refreshAll();} }
+    function toggleGroup(id) { if(expandedGroups.has(id)) expandedGroups.delete(id); else expandedGroups.add(id); updateUnifiedList(); }
+    function expandAll(e) { if(e) tasks.forEach(t=>expandedGroups.add(t.id)); else expandedGroups.clear(); updateUnifiedList(); }
+    document.addEventListener('change', (e) => { if(e.target.classList.contains('progress-slider')) saveData(); });
 
-    // Drag and Drop Logic
-    function dragStart(event, index) {
-        draggedItem = index;
-        event.dataTransfer.effectAllowed = 'move';
-        event.target.style.opacity = '0.5';
-    }
-    function dragOver(event) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }
-    function drop(event, index) {
-        event.preventDefault();
-        const items = document.querySelectorAll('#unified-list > div');
-        if(items[draggedItem]) items[draggedItem].style.opacity = '1';
-        if (draggedItem !== index) {
-            const itemToMove = tasks.splice(draggedItem, 1)[0];
-            tasks.splice(index, 0, itemToMove);
-            saveData();
-            refreshAll();
-        }
-    }
-
-    function toggleVisibility(id) {
-        const task = tasks.find(t => t.id === id);
-        if (task) { task.visivel = task.visivel === undefined ? false : !task.visivel; saveData(); refreshAll(); }
-    }
-    function toggleGroup(taskId) {
-        if (expandedGroups.has(taskId)) expandedGroups.delete(taskId); else expandedGroups.add(taskId);
-        updateUnifiedList();
-    }
-    function expandAll(expand) {
-        if (expand) tasks.forEach(t => expandedGroups.add(t.id)); else expandedGroups.clear();
-        updateUnifiedList();
-    }
-
-    // --- Dashboard Estilizado ---
     function updateDashboard() {
         const dash = document.getElementById('dashboard');
         const activeTasks = tasks.filter(t => t.visivel !== false);
-        
-        if (activeTasks.length === 0) {
-            dash.innerHTML = '<div class="text-xs text-slate-500 text-center py-6">Nenhum empreendimento visível.</div>';
-            return;
-        }
+        if (activeTasks.length === 0) { dash.innerHTML = '<div class="text-xs text-slate-500 text-center py-6">Nenhum empreendimento visível.</div>'; return; }
 
         let html = '';
-
         activeTasks.forEach((task, idx) => {
             const tMs = milestones.filter(m => m.tarefa_id === task.id);
             const startP = tMs.find(m => m.tarefa === 'Início do projeto');
@@ -473,94 +338,51 @@
             const color = barColors[idx % barColors.length];
             const progress = parseInt(task.progresso || 0);
 
-            // Status Logic
-            let statusText = "Em andamento";
-            let statusColor = "#3b82f6"; // Blue
-            let statusDot = "🔵";
-            
-            const today = new Date();
-            if (progress === 100) {
-                statusText = "Concluído";
-                statusColor = "#22c55e"; // Green
-                statusDot = "🟢";
-            } else if (endP && new Date(endP.data_prevista) < today) {
-                statusText = "Atrasado";
-                statusColor = "#ef4444"; // Red
-                statusDot = "🔴";
-            }
+            let statusText="Em andamento", statusColor="#3b82f6", statusDot="🔵";
+            const today=new Date();
+            if (progress===100) { statusText="Concluído"; statusColor="#22c55e"; statusDot="🟢"; }
+            else if (endP && parseDateSafe(endP.data_prevista) && new Date(endP.data_prevista) < today) { statusText="Atrasado"; statusColor="#ef4444"; statusDot="🔴"; }
 
-            let durationBox = '-';
-            let gapBox = '-';
-            let periodText = 'Datas não definidas';
+            let durationBox='-', gapBox='-', periodText='Datas não definidas';
 
-            // Duração (Meses)
             if (startP && endP) {
-                const d1 = new Date(startP.data_prevista);
-                const d2 = new Date(endP.data_prevista);
-                const diffTime = d2 - d1;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                if (diffDays >= 0) {
-                    const diffMonths = Math.ceil(diffDays / 30);
-                    durationBox = `${diffMonths} meses`;
-                    // Período formatado
-                    const fmt = (d) => d.toISOString().split('T')[0];
-                    periodText = `${fmt(d1)} a ${fmt(d2)}`;
+                const s = parseDateSafe(startP.data_prevista), e = parseDateSafe(endP.data_prevista);
+                if(s && e) {
+                    const diffMonths = (e.y - s.y) * 12 + (e.m - s.m) + ((e.d - s.d)/30);
+                    durationBox = `${Math.ceil(diffMonths)} meses`;
+                    periodText = `${startP.data_prevista} a ${endP.data_prevista}`;
                 }
             }
 
-            // Lead Time (Dias)
             if (endP && startO) {
-                const dEnd = new Date(endP.data_prevista);
-                const dObra = new Date(startO.data_prevista);
-                const diffTime = dObra - dEnd;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const textColor = diffDays < 0 ? 'text-red-400' : 'text-green-400';
-                gapBox = `<span class="${textColor} font-bold">${diffDays} dias</span>`;
+                const e = parseDateSafe(endP.data_prevista), o = parseDateSafe(startO.data_prevista);
+                if(e && o) {
+                    const diffTime = new Date(o.y, o.m, o.d) - new Date(e.y, e.m, e.d);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const textColor = diffDays < 0 ? 'text-red-400' : 'text-green-400';
+                    gapBox = `<span class="${textColor} font-bold">${diffDays} dias</span>`;
+                }
             }
 
             html += `
                 <div class="dash-card mb-2" style="--card-color: ${color}">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="text-lg">🎯</span>
-                            <span class="font-bold text-sm text-white truncate max-w-[150px]" title="${task.tarefa}">${task.tarefa}</span>
-                        </div>
-                        <div class="px-2 py-1 rounded text-[10px] font-bold border" style="color: ${statusColor}; border-color: ${statusColor}40; background: ${statusColor}10;">
-                            ${statusDot} ${statusText}
-                        </div>
+                        <div class="flex items-center gap-2"><span class="text-lg">🎯</span><span class="font-bold text-sm text-white truncate max-w-[150px]">${task.tarefa}</span></div>
+                        <div class="px-2 py-1 rounded text-[10px] font-bold border" style="color: ${statusColor}; border-color: ${statusColor}40; background: ${statusColor}10;">${statusDot} ${statusText}</div>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4 text-xs mb-4">
-                        <div>
-                            <span class="block text-slate-500 mb-1">📅 Duração Projeto</span>
-                            <span class="text-white font-bold text-sm">${durationBox}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-slate-500 mb-1">🗓️ Período</span>
-                            <span class="text-slate-300 font-mono text-[10px]">${periodText}</span>
-                        </div>
+                        <div><span class="block text-slate-500 mb-1">📅 Duração</span><span class="text-white font-bold text-sm">${durationBox}</span></div>
+                        <div class="text-right"><span class="block text-slate-500 mb-1">🗓️ Período</span><span class="text-slate-300 font-mono text-[10px]">${periodText}</span></div>
                     </div>
-                    
-                    <div class="flex justify-between items-end text-xs text-slate-400 mb-1">
-                       <span>Progresso</span>
-                       <span class="text-white font-bold">${progress}%</span>
-                    </div>
-                    <div class="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden mb-3">
-                        <div class="h-full rounded-full transition-all duration-500" style="width: ${progress}%; background: ${color}"></div>
-                    </div>
-                    
-                    <div class="pt-2 border-t border-slate-700/50 flex justify-between items-center text-[10px]">
-                        <span class="text-slate-500">Lead Time (Entrega -> Obra):</span>
-                        ${gapBox}
-                    </div>
+                    <div class="flex justify-between items-end text-xs text-slate-400 mb-1"><span>Progresso</span><span class="text-white font-bold">${progress}%</span></div>
+                    <div class="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden mb-3"><div class="h-full rounded-full transition-all duration-500" style="width: ${progress}%; background: ${color}"></div></div>
+                    <div class="pt-2 border-t border-slate-700/50 flex justify-between items-center text-[10px]"><span class="text-slate-500">Lead Time:</span>${gapBox}</div>
                 </div>
             `;
         });
-
         dash.innerHTML = html;
     }
 
-    // --- Renderização Gráfico ---
     function getTimelineBounds() {
         const activeTasks = tasks.filter(t => t.visivel !== false);
         let activeMilestones = [];
@@ -568,35 +390,27 @@
             const ms = milestones.filter(m => m.tarefa_id === t.id && m.data_prevista);
             activeMilestones = activeMilestones.concat(ms);
         });
-
         if (activeMilestones.length === 0) return null;
-
-        const dates = activeMilestones.map(m => new Date(m.data_prevista + 'T00:00:00').getTime());
+        const dates = activeMilestones.map(m => { const d=parseDateSafe(m.data_prevista); return new Date(d.y, d.m, d.d).getTime(); });
         const minRaw = new Date(Math.min(...dates));
         const maxRaw = new Date(Math.max(...dates));
-        
-        const minDate = new Date(minRaw.getFullYear(), minRaw.getMonth() - 1, 1);
-        const maxDate = new Date(maxRaw.getFullYear(), maxRaw.getMonth() + 4, 0); 
-        
-        return { minDate, maxDate };
+        return { minDate: new Date(minRaw.getFullYear(), minRaw.getMonth() - 1, 1), maxDate: new Date(maxRaw.getFullYear(), maxRaw.getMonth() + 4, 0) };
     }
 
     function getPos(dateStr, minDate, pxPerMonth, taskStartStr = null) {
         if (!dateStr) return 0;
-        const d = new Date(dateStr + 'T00:00:00');
-        
+        const d = parseDateSafe(dateStr);
+        if(!d) return 0;
         if (viewMode === 'elapsed') {
-            const baseDate = taskStartStr ? new Date(taskStartStr + 'T00:00:00') : d;
-            const diffMonths = (d.getFullYear() - baseDate.getFullYear()) * 12 + (d.getMonth() - baseDate.getMonth());
-            const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-            const fraction = Math.max(0, Math.min(1, (d.getDate() - 1) / daysInMonth));
-            return (1 + diffMonths + fraction) * pxPerMonth;
-        } 
-        else {
-            const totalMonths = (d.getFullYear() - minDate.getFullYear()) * 12 + (d.getMonth() - minDate.getMonth());
-            const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-            const fraction = Math.max(0, Math.min(1, (d.getDate() - 1) / daysInMonth));
-            return (totalMonths + fraction) * pxPerMonth;
+            const base = parseDateSafe(taskStartStr) || d;
+            const dMonths = d.y * 12 + d.m + (d.d/30);
+            const bMonths = base.y * 12 + base.m + (base.d/30);
+            const diff = Math.max(0, dMonths - bMonths); 
+            return (1 + diff) * pxPerMonth;
+        } else {
+            const dMonths = d.y * 12 + d.m + (d.d/30);
+            const mMonths = minDate.getFullYear() * 12 + minDate.getMonth();
+            return (dMonths - mMonths) * pxPerMonth;
         }
     }
 
@@ -604,179 +418,114 @@
         const container = document.getElementById('gantt-chart');
         const activeTasks = tasks.filter(t => t.visivel !== false);
         const bounds = getTimelineBounds();
-        
-        if (!bounds || activeTasks.length === 0) {
-            container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm mt-10"><p>Adicione Empreendimentos e Marcos para visualizar o gráfico</p></div>';
-            return;
-        }
+        if (!bounds || activeTasks.length === 0) { container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm mt-10"><p>Adicione Empreendimentos e Marcos</p></div>'; return; }
 
         const { minDate, maxDate } = bounds;
-        const headerHeight = 40;
-        const rowHeight = 50; 
-        const labelWidth = 180;
+        const headerHeight=40, rowHeight=50, labelWidth=180;
+        const minLabelWidth=90, skipStep=Math.ceil(minLabelWidth/monthWidth);
 
-        const minLabelWidth = 90; 
-        const skipStep = Math.ceil(minLabelWidth / monthWidth); 
-
-        let headers = [];
-        let monthCount = 0;
-        let totalMonthsToDraw = 0;
-        
+        let headers=[], totalMonthsToDraw=0;
         if (viewMode === 'months') {
-            let cursor = new Date(minDate);
-            while (cursor <= maxDate) { totalMonthsToDraw++; cursor.setMonth(cursor.getMonth() + 1); }
-        } else {
-            totalMonthsToDraw = 48; 
-        }
+            let c = new Date(minDate); while (c <= maxDate) { totalMonthsToDraw++; c.setMonth(c.getMonth() + 1); }
+        } else { totalMonthsToDraw = 48; }
 
         let cursorDate = new Date(minDate);
         for(let i=0; i < totalMonthsToDraw; i++) {
             let labelText = '';
             if (i % skipStep === 0) {
-                if (viewMode === 'months') {
-                    labelText = cursorDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-                } else {
-                    if (i > 0) labelText = `Mês ${i}`; 
-                }
+                if (viewMode === 'months') labelText = cursorDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+                else if (i > 0) labelText = `Mês ${i}`;
             }
             headers.push({ text: labelText });
             cursorDate.setMonth(cursorDate.getMonth() + 1);
         }
 
-        const totalWidth = headers.length * monthWidth;
-
         let html = `
-            <div class="relative gantt-container" style="min-width: ${labelWidth + totalWidth}px;">
+            <div class="relative gantt-container" style="min-width: ${labelWidth + headers.length * monthWidth}px;">
                 <div class="flex sticky-header" style="border-bottom: 1px solid #475569;">
-                    <div class="flex-shrink-0 p-2 font-bold text-xs flex items-center sticky-col" style="width: ${labelWidth}px; color: ${defaultConfig.primary_action};">
-                        EMPREENDIMENTO
-                    </div>
+                    <div class="flex-shrink-0 p-2 font-bold text-xs flex items-center sticky-col" style="width: ${labelWidth}px; color: ${defaultConfig.primary_action};">EMPREENDIMENTO</div>
                     <div class="flex">
-                        ${headers.map(h => `
-                            <div class="flex items-center justify-center text-xs text-slate-400 border-r border-slate-700 overflow-hidden whitespace-nowrap" style="width: ${monthWidth}px; height: ${headerHeight}px;">
-                                ${h.text}
-                            </div>
-                        `).join('')}
+                        ${headers.map(h => `<div class="flex items-center justify-center text-xs text-slate-400 border-r border-slate-700 relative" style="width: ${monthWidth}px; height: ${headerHeight}px; overflow: visible;"><span style="position: absolute; white-space: nowrap; left: 50%; transform: translateX(-50%); pointer-events: none;">${h.text}</span></div>`).join('')}
                     </div>
                 </div>
         `;
         
+        // Critical Period
         if (showCritical && viewMode === 'months') {
             const criticalPeriods = calculateCriticalPeriod(minDate, maxDate);
             if (criticalPeriods) {
                 criticalPeriods.forEach(p => {
-                    const getAbsPos = (d) => {
-                        const tm = (d.getFullYear() - minDate.getFullYear()) * 12 + (d.getMonth() - minDate.getMonth());
-                        return tm * monthWidth;
-                    };
-                    const startX = getAbsPos(p.start) + labelWidth;
-                    const endX = getAbsPos(p.end) + monthWidth + labelWidth;
+                    const startX = ((p.start.getFullYear() - minDate.getFullYear()) * 12 + (p.start.getMonth() - minDate.getMonth())) * monthWidth + labelWidth;
+                    const endX = ((p.end.getFullYear() - minDate.getFullYear()) * 12 + (p.end.getMonth() - minDate.getMonth())) * monthWidth + monthWidth + labelWidth;
                     const width = endX - startX;
                     const pStartStr = p.start.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
                     const pEndStr = p.end.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
-
-                    html += `
-                        <div class="critical-period-overlay flex flex-col items-center justify-start pt-2" style="left: ${startX}px; width: ${width}px;">
-                            <span class="text-[10px] bg-red-600 text-white px-1 rounded shadow whitespace-nowrap z-50">
-                                ⚠️ ${p.count} Projetos
-                            </span>
-                             <span class="text-[9px] text-red-300 mt-1 whitespace-nowrap">
-                                ${pStartStr} - ${pEndStr}
-                            </span>
-                        </div>
-                    `;
+                    html += `<div class="critical-period-overlay flex flex-col items-center justify-start pt-2" style="left: ${startX}px; width: ${width}px;"><span class="text-[10px] bg-red-600 text-white px-1 rounded shadow z-50">⚠️ ${p.count} Projetos</span><span class="text-[9px] text-red-300 mt-1">${pStartStr} - ${pEndStr}</span></div>`;
                 });
             }
         }
 
         html += `<div>`;
-
         activeTasks.forEach((task, idx) => {
             const tMs = milestones.filter(m => m.tarefa_id === task.id);
             const startM = tMs.find(m => m.tarefa === 'Início do projeto');
             const endM = tMs.find(m => m.tarefa === 'Entrega do projeto');
             const startO = tMs.find(m => m.tarefa === 'Início da obra');
-            
             const baseDateStr = startM ? startM.data_prevista : null;
             const color = barColors[idx % barColors.length];
             const progress = parseInt(task.progresso || 0);
             
             html += `
                 <div class="flex relative border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors" style="height: ${rowHeight}px;">
-                    <div class="flex-shrink-0 px-2 text-xs font-bold flex flex-col justify-center sticky-col" style="width: ${labelWidth}px; color: ${color};">
-                        <div class="truncate" title="${task.tarefa}">${task.tarefa}</div>
-                        ${task.tags ? `<div class="text-[10px] text-slate-500 truncate">${task.tags}</div>` : ''}
-                    </div>
-                    <div class="absolute inset-0 left-[${labelWidth}px] flex pointer-events-none">
-                        ${headers.map(() => `<div class="border-r border-slate-700/20" style="width: ${monthWidth}px;"></div>`).join('')}
-                    </div>
+                    <div class="flex-shrink-0 px-2 text-xs font-bold flex flex-col justify-center sticky-col" style="width: ${labelWidth}px; color: ${color};"><div class="truncate">${task.tarefa}</div>${task.tags ? `<div class="text-[10px] text-slate-500 truncate">${task.tags}</div>` : ''}</div>
+                    <div class="absolute inset-0 left-[${labelWidth}px] flex pointer-events-none">${headers.map(() => `<div class="border-r border-slate-700/20" style="width: ${monthWidth}px;"></div>`).join('')}</div>
                     <div class="relative flex-1 h-full">
             `;
 
             if (endM && startO && endM.data_prevista && startO.data_prevista) {
                 const xEnd = getPos(endM.data_prevista, minDate, monthWidth, baseDateStr);
                 const xStartO = getPos(startO.data_prevista, minDate, monthWidth, baseDateStr);
-                let barColor = xStartO >= xEnd ? 'bg-emerald-500/40 border-emerald-500' : 'bg-rose-500/40 border-rose-500';
+                const isOverlap = xStartO < xEnd;
+                let barColor = isOverlap ? 'bg-rose-500/60 border-rose-500' : 'bg-emerald-500/40 border-emerald-500';
+                let zIndex = isOverlap ? 'z-30' : 'z-0'; 
                 let barLeft = Math.min(xEnd, xStartO);
                 let barW = Math.abs(xEnd - xStartO);
-                if (barW > 0) {
-                    html += `<div class="absolute top-[22px] h-[6px] rounded ${barColor} border border-dashed z-0" style="left: ${barLeft}px; width: ${barW}px;"></div>`;
-                }
+                if (barW > 0) html += `<div class="absolute top-[22px] h-[6px] rounded ${barColor} border border-dashed ${zIndex} shadow-sm" style="left: ${barLeft}px; width: ${barW}px; border-color: rgba(255,255,255,0.5);"></div>`;
             }
 
             if (startM && endM && startM.data_prevista && endM.data_prevista) {
                 const x1 = getPos(startM.data_prevista, minDate, monthWidth, baseDateStr);
                 const x2 = getPos(endM.data_prevista, minDate, monthWidth, baseDateStr);
                 const width = Math.max(4, x2 - x1);
-
-                html += `
-                    <div class="gantt-bar absolute top-[15px] h-[20px] rounded shadow-lg overflow-hidden flex items-center" 
-                         style="left: ${x1}px; width: ${width}px; background: ${color}40; border: 2px solid ${color};">
-                         ${progress > 0 ? `<div class="h-full" style="width: ${progress}%; background: ${color}; opacity: 0.8;"></div>` : ''}
-                         ${progress > 0 ? `<span class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow-md">${progress}%</span>` : ''}
-                    </div>
-                `;
+                html += `<div class="gantt-bar absolute top-[15px] h-[20px] rounded shadow-lg overflow-hidden flex items-center z-20" style="left: ${x1}px; width: ${width}px; background: ${color}40; border: 2px solid ${color};">${progress > 0 ? `<div class="h-full" style="width: ${progress}%; background: ${color}; opacity: 0.8;"></div><span class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow-md">${progress}%</span>` : ''}</div>`;
             }
 
             tMs.forEach(m => {
                 if (!m.data_prevista) return;
                 const x = getPos(m.data_prevista, minDate, monthWidth, baseDateStr);
-                const typeInfo = MILESTONE_TYPES[m.tarefa];
+                const icon = MILESTONE_TYPES[m.tarefa]?.icon || '📍';
                 const dateBr = m.data_prevista.split('-').reverse().join('/');
-                if (typeInfo) {
-                    html += `
-                        <div class="milestone-icon" style="left: ${x}px;" title="${m.tarefa}: ${dateBr}">
-                            <span>${typeInfo.icon}</span>
-                            <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-slate-800 text-white px-1.5 py-0.5 rounded opacity-0 hover:opacity-100 whitespace-nowrap pointer-events-none border border-slate-600 transition-opacity z-50 shadow-xl">
-                                ${dateBr}
-                            </span>
-                        </div>
-                    `;
-                }
+                html += `<div class="milestone-icon" style="left: ${x}px;" title="${m.tarefa}: ${dateBr}"><span>${icon}</span><span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-slate-800 text-white px-1.5 py-0.5 rounded opacity-0 hover:opacity-100 whitespace-nowrap pointer-events-none border border-slate-600 z-50 shadow-xl">${dateBr}</span></div>`;
             });
-
             html += `</div></div>`;
         });
-
         html += `</div></div>`;
         container.innerHTML = html;
     }
 
+    // Logic Functions (Same as before)
     function calculateCriticalPeriod(minDate, maxDate) {
         if (tasks.length === 0) return null;
-        let heatMap = {};
-        let maxOverlap = 0;
-        let cursor = new Date(minDate);
+        let heatMap = {}, maxOverlap = 0, cursor = new Date(minDate);
         while (cursor <= maxDate) {
-            const key = cursor.toISOString().slice(0, 7);
-            heatMap[key] = 0;
+            const key = cursor.toISOString().slice(0, 7); heatMap[key] = 0;
             tasks.forEach(t => {
                 const tMs = milestones.filter(m => m.tarefa_id === t.id);
                 const start = tMs.find(m => m.tarefa === 'Início do projeto')?.data_prevista;
                 const end = tMs.find(m => m.tarefa === 'Entrega do projeto')?.data_prevista;
                 if (start && end) {
-                    const sDate = new Date(start);
-                    const eDate = new Date(end);
+                    const s = parseDateSafe(start), e = parseDateSafe(end);
+                    const sDate = new Date(s.y, s.m, s.d), eDate = new Date(e.y, e.m, e.d);
                     const cursorEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
                     if (cursor <= eDate && cursorEnd >= sDate) heatMap[key]++;
                 }
@@ -785,220 +534,47 @@
             cursor.setMonth(cursor.getMonth() + 1);
         }
         if (maxOverlap < 2) return null;
-        let periods = [];
-        let currentPeriod = null;
-        cursor = new Date(minDate);
+        let periods = [], currentPeriod = null; cursor = new Date(minDate);
         while (cursor <= maxDate) {
             const key = cursor.toISOString().slice(0, 7);
             if (heatMap[key] === maxOverlap) {
                 if (!currentPeriod) currentPeriod = { start: new Date(cursor), end: new Date(cursor), count: maxOverlap };
                 else currentPeriod.end = new Date(cursor);
-            } else {
-                if (currentPeriod) { periods.push(currentPeriod); currentPeriod = null; }
-            }
+            } else { if (currentPeriod) { periods.push(currentPeriod); currentPeriod = null; } }
             cursor.setMonth(cursor.getMonth() + 1);
         }
         if (currentPeriod) periods.push(currentPeriod);
         return periods;
     }
 
-    function toggleCriticalPeriod() {
-        showCritical = !showCritical;
-        const btn = document.getElementById('toggle-critical');
-        if(showCritical) btn.classList.add('bg-red-900/50', 'border-red-500', 'text-red-200');
-        else btn.classList.remove('bg-red-900/50', 'border-red-500', 'text-red-200');
-        renderGantt();
-    }
-
-    function editTask(id) {
-        const task = tasks.find(t => t.id === id);
-        if (!task) return;
-        editingTaskId = id;
-        document.getElementById('task-name').value = task.tarefa;
-        document.getElementById('task-tags').value = task.tags || '';
-        
-        document.getElementById('task-form-title').textContent = "✏️ Editando Empreendimento";
-        document.getElementById('task-form-title').classList.replace('text-indigo-400', 'text-amber-400');
-        document.getElementById('task-submit-btn').textContent = "ATUALIZAR";
-        document.getElementById('task-submit-btn').classList.replace('bg-indigo-600', 'bg-amber-600');
-        document.getElementById('task-submit-btn').classList.replace('hover:bg-indigo-700', 'hover:bg-amber-700');
-        document.getElementById('task-cancel-btn').classList.remove('hidden');
-        switchTab('tasks');
-    }
-
-    function resetTaskForm() {
-        editingTaskId = null;
-        document.getElementById('task-form').reset();
-        document.getElementById('task-form-title').textContent = "➕ Novo Empreendimento";
-        document.getElementById('task-form-title').classList.replace('text-amber-400', 'text-indigo-400');
-        document.getElementById('task-submit-btn').textContent = "SALVAR";
-        document.getElementById('task-submit-btn').classList.replace('bg-amber-600', 'bg-indigo-600');
-        document.getElementById('task-submit-btn').classList.replace('hover:bg-amber-700', 'hover:bg-indigo-700');
-        document.getElementById('task-cancel-btn').classList.add('hidden');
-    }
-
-    function editMilestone(id) {
-        const ms = milestones.find(m => m.id === id);
-        if (!ms) return;
-        editingMilestoneId = id;
-        document.getElementById('milestone-task').value = ms.tarefa_id;
-        document.getElementById('milestone-type').value = ms.tarefa;
-        document.getElementById('milestone-date').value = ms.data_prevista;
-        
-        document.getElementById('milestone-form-title').textContent = "✏️ Editando Marco";
-        document.getElementById('milestone-form-title').classList.replace('text-purple-400', 'text-amber-400');
-        document.getElementById('milestone-submit-btn').textContent = "ATUALIZAR DATA";
-        document.getElementById('milestone-submit-btn').classList.replace('bg-purple-600', 'bg-amber-600');
-        document.getElementById('milestone-submit-btn').classList.replace('hover:bg-purple-700', 'hover:bg-amber-700');
-        document.getElementById('milestone-cancel-btn').classList.remove('hidden');
-        switchTab('milestones');
-    }
-
-    function resetMilestoneForm() {
-        editingMilestoneId = null;
-        document.getElementById('milestone-form').reset();
-        document.getElementById('milestone-form-title').textContent = "📍 Definir Datas";
-        document.getElementById('milestone-form-title').classList.replace('text-amber-400', 'text-purple-400');
-        document.getElementById('milestone-submit-btn').textContent = "SALVAR DATA";
-        document.getElementById('milestone-submit-btn').classList.replace('bg-amber-600', 'bg-purple-600');
-        document.getElementById('milestone-submit-btn').classList.replace('hover:bg-amber-700', 'hover:bg-purple-700');
-        document.getElementById('milestone-cancel-btn').classList.add('hidden');
-        refreshTaskSelectOptions();
-    }
-
-    document.getElementById('task-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('task-name').value.trim();
-      const tags = document.getElementById('task-tags').value.trim();
-      if (!name) return;
-
-      if (editingTaskId) {
-          const index = tasks.findIndex(t => t.id === editingTaskId);
-          if (index !== -1) {
-              tasks[index].tarefa = name;
-              tasks[index].tags = tags;
-          }
-          resetTaskForm();
-      } else {
-          tasks.push({ id: Date.now().toString(), tarefa: name, tags: tags, progresso: 0, visivel: true });
-          document.getElementById('task-form').reset();
-          expandedGroups.add(tasks[tasks.length-1].id);
-      }
-      refreshAll();
-      saveData();
-    });
-
-    document.getElementById('milestone-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const taskSelect = document.getElementById('milestone-task');
-      const typeSelect = document.getElementById('milestone-type');
-      const dateInput = document.getElementById('milestone-date');
-      const taskId = taskSelect.value;
-      const type = typeSelect.value;
-      const date = dateInput.value;
-
-      if (!taskId || !date) return;
-
-      if (editingMilestoneId) {
-          const index = milestones.findIndex(m => m.id === editingMilestoneId);
-          if (index !== -1) {
-              milestones[index].tarefa_id = taskId;
-              milestones[index].tarefa = type;
-              milestones[index].data_prevista = date;
-          }
-          resetMilestoneForm();
-      } else {
-          milestones = milestones.filter(m => !(m.tarefa_id === taskId && m.tarefa === type));
-          milestones.push({ id: Date.now().toString(), tarefa: type, tarefa_id: taskId, data_prevista: date });
-          
-          dateInput.value = '';
-          const currentIndex = MILESTONE_SEQUENCE.indexOf(type);
-          if (currentIndex !== -1 && currentIndex < MILESTONE_SEQUENCE.length - 1) {
-              typeSelect.value = MILESTONE_SEQUENCE[currentIndex + 1];
-              dateInput.focus();
-          }
-          expandedGroups.add(taskId);
-      }
-      refreshAll();
-      saveData();
-    });
-
-    function refreshTaskSelectOptions() {
-      const select = document.getElementById('milestone-task');
-      const current = select.value;
-      select.innerHTML = '<option value="">Selecione...</option>';
-      tasks.forEach(t => {
-        const option = document.createElement('option');
-        option.value = t.id;
-        option.textContent = t.tarefa;
-        select.appendChild(option);
-      });
-      if (!editingMilestoneId && current && tasks.find(t => t.id === current)) {
-          select.value = current;
-      }
-    }
-
-    function switchTab(target) {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-            btn.classList.add('inactive');
-        });
-        document.getElementById('tasks-section').classList.add('hidden');
-        document.getElementById('milestones-section').classList.add('hidden');
-
-        const targetBtn = document.getElementById(`tab-${target}`);
-        targetBtn.classList.add('active');
-        targetBtn.classList.remove('inactive');
-        
-        document.getElementById(`${target}-section`).classList.remove('hidden');
-    }
-
-    document.getElementById('tab-tasks').addEventListener('click', () => switchTab('tasks'));
-    document.getElementById('tab-milestones').addEventListener('click', () => switchTab('milestones'));
+    function toggleCriticalPeriod() { showCritical = !showCritical; renderGantt(); }
     
-    document.getElementById('view-months').addEventListener('click', () => { viewMode = 'months'; updateViewButtons(); renderGantt(); });
-    document.getElementById('view-elapsed').addEventListener('click', () => { viewMode = 'elapsed'; updateViewButtons(); renderGantt(); });
+    // Forms
+    function editTask(id) { const t=tasks.find(x=>x.id===id); if(t){ editingTaskId=id; document.getElementById('task-name').value=t.tarefa; document.getElementById('task-tags').value=t.tags; document.getElementById('task-submit-btn').textContent="ATUALIZAR"; document.getElementById('task-cancel-btn').classList.remove('hidden'); switchTab('tasks'); }}
+    function resetTaskForm() { editingTaskId=null; document.getElementById('task-form').reset(); document.getElementById('task-submit-btn').textContent="SALVAR"; document.getElementById('task-cancel-btn').classList.add('hidden'); }
+    function editMilestone(id) { const m=milestones.find(x=>x.id===id); if(m){ editingMilestoneId=id; document.getElementById('milestone-task').value=m.tarefa_id; document.getElementById('milestone-type').value=m.tarefa; document.getElementById('milestone-date').value=m.data_prevista; document.getElementById('milestone-submit-btn').textContent="ATUALIZAR DATA"; document.getElementById('milestone-cancel-btn').classList.remove('hidden'); switchTab('milestones'); }}
+    function resetMilestoneForm() { editingMilestoneId=null; document.getElementById('milestone-form').reset(); document.getElementById('milestone-submit-btn').textContent="SALVAR DATA"; document.getElementById('milestone-cancel-btn').classList.add('hidden'); }
+
+    // Events
+    document.getElementById('task-form').addEventListener('submit', (e)=>{e.preventDefault(); const n=document.getElementById('task-name').value; if(!n) return; if(editingTaskId){const t=tasks.find(x=>x.id===editingTaskId); t.tarefa=n; t.tags=document.getElementById('task-tags').value; resetTaskForm();} else {tasks.push({id:Date.now().toString(), tarefa:n, tags:document.getElementById('task-tags').value, progresso:0, visivel:true}); document.getElementById('task-form').reset();} saveData(); refreshAll();});
+    document.getElementById('milestone-form').addEventListener('submit', (e)=>{e.preventDefault(); const tid=document.getElementById('milestone-task').value; const date=document.getElementById('milestone-date').value; if(!tid||!date) return; const type=document.getElementById('milestone-type').value; if(editingMilestoneId){const m=milestones.find(x=>x.id===editingMilestoneId); m.tarefa_id=tid; m.tarefa=type; m.data_prevista=date; resetMilestoneForm();} else {milestones=milestones.filter(m=>!(m.tarefa_id===tid && m.tarefa===type)); milestones.push({id:Date.now().toString(), tarefa:type, tarefa_id:tid, data_prevista:date});} saveData(); refreshAll();});
+    function refreshTaskSelectOptions() { const s=document.getElementById('milestone-task'); const v=s.value; s.innerHTML='<option value="">Selecione...</option>'; tasks.forEach(t=>{const o=document.createElement('option'); o.value=t.id; o.textContent=t.tarefa; s.appendChild(o)}); if(!editingMilestoneId && v && tasks.find(t=>t.id===v)) s.value=v; }
+    function switchTab(t) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(`tab-${t}`).classList.add('active'); document.getElementById('tasks-section').classList.add('hidden'); document.getElementById('milestones-section').classList.add('hidden'); document.getElementById(`${t}-section`).classList.remove('hidden'); }
     
-    function updateViewButtons() {
-      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-      if (viewMode === 'months') document.getElementById('view-months').classList.add('active');
-      if (viewMode === 'elapsed') document.getElementById('view-elapsed').classList.add('active');
-    }
-
-    document.getElementById('zoom-slider').addEventListener('input', (e) => {
-        monthWidth = parseInt(e.target.value);
-        renderGantt();
-    });
-
-    document.getElementById('toggle-dashboard').addEventListener('click', () => {
-      dashboardVisible = !dashboardVisible;
-      const dashboardPanel = document.getElementById('dashboard-panel');
-      const chartSection = document.getElementById('chart-dashboard-container').children[0];
-      if (dashboardVisible) {
-        dashboardPanel.classList.remove('hidden');
-        chartSection.classList.add('lg:col-span-3');
-        chartSection.classList.remove('lg:col-span-4');
-      } else {
-        dashboardPanel.classList.add('hidden');
-        chartSection.classList.remove('lg:col-span-3');
-        chartSection.classList.add('lg:col-span-4');
-      }
-    });
-
+    document.getElementById('tab-tasks').addEventListener('click', ()=>switchTab('tasks')); document.getElementById('tab-milestones').addEventListener('click', ()=>switchTab('milestones'));
+    
+    document.getElementById('view-months').addEventListener('click', ()=>{ viewMode='months'; document.getElementById('view-months').classList.add('active'); document.getElementById('view-elapsed').classList.remove('active'); refreshAll();}); 
+    document.getElementById('view-elapsed').addEventListener('click', ()=>{ viewMode='elapsed'; document.getElementById('view-elapsed').classList.add('active'); document.getElementById('view-months').classList.remove('active'); refreshAll();});
+    
+    document.getElementById('zoom-slider').addEventListener('input', (e)=>{monthWidth=parseInt(e.target.value); renderGantt();});
+    document.getElementById('toggle-dashboard').addEventListener('click', () => { dashboardVisible = !dashboardVisible; const p = document.getElementById('dashboard-panel'); const c = document.getElementById('chart-dashboard-container').children[0]; if(dashboardVisible) { p.classList.remove('hidden'); c.classList.add('lg:col-span-3'); c.classList.remove('lg:col-span-4'); } else { p.classList.add('hidden'); c.classList.remove('lg:col-span-3'); c.classList.add('lg:col-span-4'); }});
+    
     window.deleteTask = (id) => { if(confirm('Excluir?')) { tasks = tasks.filter(t => t.id !== id); milestones = milestones.filter(m => m.tarefa_id !== id); saveData(); refreshAll(); }};
     window.deleteMilestone = (id) => { if(confirm('Excluir data?')) { milestones = milestones.filter(m => m.id !== id); saveData(); refreshAll(); }};
 
     document.getElementById('download-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('download-btn');
-      btn.disabled = true; btn.style.opacity = '0.5';
-      try {
-        const chart = document.getElementById('gantt-chart-wrapper');
-        const canvas = await html2canvas(chart, { backgroundColor: '#0f172a', scale: 2, width: chart.scrollWidth, windowWidth: chart.scrollWidth });
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = `cronograma.png`;
-        link.click();
-      } catch (e) { console.error(e); } 
+      const btn = document.getElementById('download-btn'); btn.disabled = true; btn.style.opacity = '0.5';
+      try { const c = document.getElementById('gantt-chart-wrapper'); const canvas = await html2canvas(c, { backgroundColor: '#0f172a', scale: 2, width: c.scrollWidth, windowWidth: c.scrollWidth }); const link = document.createElement('a'); link.href = canvas.toDataURL('image/png'); link.download = `cronograma.png`; link.click(); } catch (e) { console.error(e); } 
       finally { btn.disabled = false; btn.style.opacity = '1'; }
     });
 
