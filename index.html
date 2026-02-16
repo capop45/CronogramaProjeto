@@ -3,716 +3,1183 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cronograma do Projeto</title>
+  <title>Cronograma - Meses e Corridos</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Space Grotesk', sans-serif; }
-    html, body { height: 100%; width: 100%; }
-    body { background: #0f172a; color: #e2e8f0; margin: 0; overflow: hidden; }
-    #app { display: flex; flex-direction: column; height: 100%; width: 100%; }
+    .gantt-bar { transition: all 0.3s ease; }
+    .gantt-bar:hover { transform: scaleY(1.1); filter: brightness(1.1); }
+    .view-btn { transition: all 0.2s ease; }
+    .view-btn.active { background: #6366f1 !important; border-color: #6366f1 !important; }
     ::-webkit-scrollbar { height: 8px; width: 8px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-    
-    .import-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .import-modal.hidden { display: none; }
-    .import-modal-content { background: #1e293b; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
-    
-    .main-wrapper { display: flex; flex: 1; overflow: hidden; gap: 0; }
-    .list-panel { flex: 1; border-right: 2px solid rgba(99, 102, 241, 0.3); overflow-y: auto; background: rgba(30, 41, 59, 0.5); }
-    
-    .list-header { 
-      position: sticky; 
-      top: 0; 
-      background: rgba(30, 41, 59, 0.95); 
-      border-bottom: 2px solid rgba(99, 102, 241, 0.3); 
-      font-weight: bold; 
-      font-size: 11px; 
-      color: #a78bfa; 
-      z-index: 20; 
-      display: grid; 
-      grid-template-columns: 1fr 120px 120px 100px 100px; 
-      gap: 0; 
-      padding: 0;
-      text-transform: uppercase; 
-      letter-spacing: 0.5px;
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { background: #6366f1; color: white; }
+    input[type="date"] { color-scheme: dark; }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(71, 85, 105, 0.5);
+      border-radius: 8px;
+      padding: 12px;
     }
-    
-    .header-cell { 
-      padding: 14px; 
-      border-right: 1px solid rgba(99, 102, 241, 0.2);
-      display: flex; 
-      align-items: center;
-    }
-    
-    .header-cell:last-child { border-right: none; }
-    
-    .plan-group { border-bottom: 2px solid rgba(99, 102, 241, 0.3); }
-    
-    .plan-folder { 
-      background: rgba(99, 102, 241, 0.15); 
-      padding: 0; 
-      display: grid; 
-      grid-template-columns: 1fr 120px 120px 100px 100px; 
-      gap: 0; 
-      border-left: 4px solid #6366f1; 
-      cursor: pointer; 
-      transition: all 0.2s;
-      border-bottom: 1px solid rgba(99, 102, 241, 0.2);
-    }
-    
-    .plan-folder:hover { background: rgba(99, 102, 241, 0.25); }
-    
-    .plan-folder-title { 
-      padding: 14px; 
-      font-weight: 700; 
-      color: #a78bfa; 
-      font-size: 12px; 
-      display: flex; 
-      align-items: center; 
-      gap: 10px;
-    }
-    
-    .plan-count-badge { font-size: 10px; color: #94a3b8; margin-left: 8px; background: rgba(71, 85, 105, 0.3); padding: 2px 6px; border-radius: 3px; }
-    
-    .plan-folder-empty { 
-      padding: 14px; 
-      border-right: 1px solid rgba(99, 102, 241, 0.2);
-      display: flex;
-      align-items: center;
-    }
-    
-    .plan-progress-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      background: rgba(71, 85, 105, 0.2);
+    .progress-bar {
+      background: rgba(71, 85, 105, 0.3);
       border-radius: 4px;
-      margin: 8px 14px;
-      font-size: 10px;
-      color: #cbd5e1;
-    }
-    
-    .plan-progress-label {
-      font-weight: 600;
-      min-width: 30px;
-    }
-    
-    .plan-progress-bar {
-      flex: 1;
       height: 6px;
-      background: rgba(71, 85, 105, 0.4);
-      border-radius: 3px;
       overflow: hidden;
-      position: relative;
     }
-    
-    .plan-progress-fill {
+    .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #6366f1);
-      border-radius: 3px;
+      border-radius: 4px;
       transition: width 0.3s ease;
     }
-    
-    .list-row { 
-      display: grid; 
-      grid-template-columns: 1fr 120px 120px 100px 100px; 
-      gap: 0; 
-      padding: 0; 
-      border-bottom: 1px solid rgba(71, 85, 105, 0.2);
-      transition: all 0.2s ease;
-      margin-left: 20px;
-    }
-    
-    .list-row:hover { background: rgba(99, 102, 241, 0.1); }
-    .list-row.highlighted { background: rgba(99, 102, 241, 0.3) !important; border-left: 3px solid #6366f1; }
-    .list-row.hidden { display: none; }
-    
-    .list-cell { 
-      padding: 12px 14px; 
-      border-right: 1px solid rgba(99, 102, 241, 0.15); 
-      display: flex; 
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .list-cell:last-child { border-right: none; }
-    
-    .activity-name { font-weight: 600; color: #e2e8f0; font-size: 12px; }
-    .activity-phase { font-size: 11px; color: #a78bfa; margin-top: 2px; }
-    
-    .cell-date { font-family: 'Courier New', monospace; font-size: 11px; color: #cbd5e1; }
-    .cell-progress { font-size: 12px; font-weight: 600; color: #22c55e; }
-    .cell-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; display: inline-block; }
-    .status-on-time { background: rgba(34, 197, 94, 0.3); color: #22c55e; }
-    .status-delayed { background: rgba(239, 68, 68, 0.3); color: #ef4444; }
-    
-    .dashboard-panel { 
-      width: 350px; 
-      border-left: 2px solid rgba(99, 102, 241, 0.3); 
-      background: rgba(30, 41, 59, 0.5); 
-      overflow-y: auto; 
-      padding: 16px; 
-      transition: all 0.3s ease;
-    }
-    .dashboard-panel.hidden { 
-      width: 0; 
-      padding: 0; 
-      border: none; 
-      overflow: hidden; 
-    }
-    
-    .dashboard-plan-section { margin-bottom: 16px; }
-    .dashboard-plan-header { 
-      font-weight: 700; 
-      color: #6366f1; 
-      font-size: 11px; 
-      padding: 8px 10px; 
-      background: rgba(99, 102, 241, 0.15); 
-      border-left: 3px solid #6366f1; 
-      margin-bottom: 8px; 
-      border-radius: 3px; 
-      text-transform: uppercase; 
-      letter-spacing: 0.5px;
-    }
-    
-    .dashboard-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-    .dashboard-title { color: #a78bfa; font-weight: bold; font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    .dashboard-item { 
-      background: rgba(71, 85, 105, 0.3); 
-      border-left: 3px solid #3b82f6; 
-      padding: 10px; 
-      border-radius: 4px; 
-      margin-bottom: 8px; 
-      font-size: 11px; 
-      cursor: pointer; 
-      transition: all 0.2s ease; 
-    }
-    .dashboard-item.delayed { border-left-color: #ef4444; }
-    .dashboard-item.upcoming { border-left-color: #3b82f6; }
-    .dashboard-item:hover { background: rgba(99, 102, 241, 0.2); }
-    .dashboard-item.highlighted { background: rgba(99, 102, 241, 0.4) !important; }
-    .dashboard-item-name { font-weight: 600; color: #e2e8f0; }
-    .dashboard-item-phase { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+    .task-level-main { border-left: 4px solid #6366f1; background: rgba(99, 102, 241, 0.1); cursor: grab; transition: all 0.2s; }
+    .task-level-main:active { cursor: grabbing; }
+    .task-level-main.dragging { opacity: 0.5; transform: scale(0.98); }
+    .task-level-main.drag-over { background: rgba(99, 102, 241, 0.3); border: 2px dashed #6366f1; }
+    .task-level-main.hidden-item { opacity: 0.4; }
+    .task-level-sub { margin-left: 20px; border-left: 3px solid #a855f7; background: rgba(168, 85, 247, 0.05); }
+    .task-level-sub.hidden-item { opacity: 0.4; }
+    .edit-mode { background: rgba(59, 130, 246, 0.2) !important; border: 1px dashed #3b82f6 !important; }
+    .hidden { display: none !important; }
+    .drag-handle { cursor: grab; color: #64748b; padding: 0 4px; }
+    .drag-handle:active { cursor: grabbing; }
+    .task-tag { display: inline-block; background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(99, 102, 241, 0.5); padding: 2px 6px; border-radius: 3px; margin-right: 4px; font-size: 10px; }
+    .milestone-overlay { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(168, 85, 247, 0.6); z-index: 5; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+    .milestone-planned { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(59, 130, 246, 0.4); z-index: 4; }
+    .milestone-name-badge { position: absolute; background: rgba(168, 85, 247, 0.95); color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.4); z-index: 15; border: 1px solid rgba(255,255,255,0.3); transform: translateX(-50%); max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+    .gantt-bar { cursor: grab; position: relative; }
+    .gantt-bar.dragging { opacity: 0.7; cursor: grabbing; z-index: 50; }
+    .gantt-container { position: relative; }
+    /* Loading overlay */
+    #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
- <body>
-  <div id="app">
-   <header class="bg-slate-800/50 border-b border-slate-700 p-4 flex justify-between items-center">
-    <div>
-     <h1 id="plan-title" class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Cronograma do Projeto</h1>
-     <p class="text-slate-400 text-sm mt-1">Data de Emissão: <span id="today-date" class="font-semibold text-indigo-300">--/--/----</span></p>
+ <body class="h-full bg-slate-900 text-slate-100 overflow-auto">
+  
+  <div id="loading-overlay" class="hidden">
+    <div class="text-center">
+      <div class="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+      <p class="text-sm text-indigo-300 font-semibold">Sincronizando...</p>
     </div>
-    <div class="flex gap-2"><button id="collapse-all-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm"> 📂 Recolher Todos </button> <button id="expand-all-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm"> 📁 Expandir Todos </button> <button id="toggle-dashboard-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium text-sm"> 📊 Ocultar Dashboard </button> <button id="import-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm"> 📥 Importar Excel </button>
+  </div>
+
+  <div id="app" class="w-full h-full flex flex-col p-6">
+   <header class="mb-6 flex justify-between items-start">
+    <div>
+     <h1 id="chart-title" class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Cronograma do Projeto</h1>
+     <p class="text-slate-400 mt-1">Organize tarefas mestras e atividades secundárias</p>
+    </div>
+    <div class="flex gap-2">
+      <button id="config-btn" class="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium border border-slate-600">
+        ⚙️ Config
+      </button>
+      <button id="toggle-dashboard" class="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> Dashboard 
+      </button> 
+      <button id="download-btn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg> Download 
+      </button>
     </div>
    </header>
-   <div id="import-modal" class="import-modal hidden">
-    <div class="import-modal-content">
-     <h2 class="text-xl font-bold text-indigo-400 mb-4">📊 Importar Excel</h2>
-     <p class="text-slate-300 text-sm mb-4">Selecione um arquivo com suas atividades</p><input type="file" id="excel-file" accept=".xlsx,.xls" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300 text-sm mb-4">
-     <div id="import-preview" class="mb-4 bg-slate-700/50 p-3 rounded max-h-96 overflow-y-auto hidden text-xs text-slate-300"></div>
-     <div class="flex gap-2"><button id="import-cancel" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium text-sm transition"> Cancelar </button> <button id="import-confirm" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition"> Importar </button>
+   
+   <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1">
+    <div class="lg:col-span-1 bg-slate-800/50 rounded-xl border border-slate-700 p-6 h-fit">
+     <div class="flex gap-2 mb-4"><button id="tab-tasks" class="tab-btn active flex-1 px-3 py-2 text-sm font-medium rounded bg-indigo-600 text-white"> 📋 Tarefas </button> <button id="tab-milestones" class="tab-btn flex-1 px-3 py-2 text-sm font-medium rounded border border-slate-600 text-slate-300 hover:border-indigo-500"> 📍 Marcos </button>
      </div>
-     <div id="import-status" class="mt-4 p-3 rounded text-sm hidden"></div>
-    </div>
-   </div>
-   <div class="main-wrapper">
-    <div class="list-panel" id="list-panel">
-     <div class="list-header">
-      <div class="header-cell">
-       Atividades GPP
-      </div>
-      <div class="header-cell">
-       Início
-      </div>
-      <div class="header-cell">
-       Fim
-      </div>
-      <div class="header-cell">
-       Progresso
-      </div>
-      <div class="header-cell">
-       Status
+     <div id="tasks-section">
+      <h2 class="text-lg font-bold text-indigo-400 mb-4">➕ Adicionar Tarefa</h2>
+      <form id="task-form" class="space-y-3">
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Nível</label> <select id="task-level" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm"> <option value="principal">🎯 Tarefa Principal (Mestra)</option> <option value="secundaria">📌 Tarefa Secundária</option> </select>
+       </div>
+       <div id="parent-task-container" class="hidden"><label class="block text-xs font-medium mb-1 text-slate-300">Tarefa Mestra</label> <select id="task-parent" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm"> <option value="">Selecione a tarefa mestra...</option> </select>
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Nome</label> <input type="text" id="task-name" placeholder="Ex: Design, Desenvolvimento" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Início</label> <input type="date" id="task-start" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Término</label> <input type="date" id="task-end" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Progresso (%)</label> <input type="number" id="task-progress" min="0" max="100" value="0" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Tags</label> <input type="text" id="task-tags" placeholder="Separadas por vírgula" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div><button type="submit" class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium text-sm"> ✓ Adicionar Tarefa </button>
+      </form>
+      <div class="mt-4 pt-4 border-t border-slate-700">
+       <h3 class="text-xs font-bold text-slate-300 mb-2">Tarefas</h3>
+       <div id="task-list" class="space-y-2 max-h-96 overflow-y-auto text-xs">
+        <p class="text-slate-500 text-center py-3">Nenhuma tarefa adicionada</p>
+       </div>
       </div>
      </div>
-     <div id="list-content"></div>
+     <div id="milestones-section" class="hidden">
+      <h2 class="text-lg font-bold text-purple-400 mb-4">📍 Adicionar Marco</h2>
+      <form id="milestone-form" class="space-y-3">
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Nome</label> <input type="text" id="milestone-name" placeholder="Ex: Lançamento, Deploy" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Tarefa</label> <select id="milestone-task" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm"> <option value="">Selecione uma tarefa...</option> </select>
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Data Prevista</label> <input type="date" id="milestone-date-planned" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div>
+       <div><label class="block text-xs font-medium mb-1 text-slate-300">Data Realizada</label> <input type="date" id="milestone-date-actual" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:border-indigo-500 focus:outline-none text-slate-100 text-sm">
+       </div><button type="submit" class="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium text-sm"> ✓ Adicionar Marco </button>
+      </form>
+      <div class="mt-4 pt-4 border-t border-slate-700">
+       <div class="flex flex-col gap-2 mb-3"><button id="toggle-milestones-actual" class="w-full px-3 py-2 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-purple-500 transition-colors"> ✔️ Ocultar Realizados </button> <button id="toggle-milestones-planned" class="w-full px-3 py-2 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-blue-500 transition-colors"> 📅 Ocultar Previstos </button>
+       </div>
+      </div>
+      <div class="mt-2 pt-2 border-t border-slate-700">
+       <h3 class="text-xs font-bold text-slate-300 mb-2">Marcos</h3>
+       <div id="milestone-list" class="space-y-2 max-h-96 overflow-y-auto text-xs">
+        <p class="text-slate-500 text-center py-3">Nenhum marco adicionado</p>
+       </div>
+      </div>
+     </div>
     </div>
-    <div class="dashboard-panel" id="dashboard-panel">
-     <h3 class="text-sm font-bold text-purple-400 mb-4">📊 Dashboard Geral</h3>
-     <div id="dashboard-overview"></div>
-     <h3 class="text-sm font-bold text-purple-400 mb-4">📋 Por Plano</h3>
-     <div id="dashboard-content"></div>
+    <div class="lg:col-span-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-full" id="chart-dashboard-container">
+     <div class="lg:col-span-3 bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
+      <div class="flex gap-2 p-3 border-b border-slate-700 bg-slate-800/30">
+          <button id="view-months" class="view-btn active px-3 py-1 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-indigo-500"> 📅 Meses </button> 
+          <button id="view-elapsed" class="view-btn px-3 py-1 text-xs font-medium rounded border border-slate-600 text-slate-300 hover:border-indigo-500"> 🔢 Meses Corridos </button>
+       <div class="flex-1"></div>
+       <p class="text-xs text-slate-400">💡 Clique e arraste as barras para movimentar</p>
+      </div>
+      <div id="gantt-chart" class="flex-1 overflow-auto p-3">
+       <div class="flex items-center justify-center h-full text-slate-400 text-sm">
+        <p>Adicione tarefas para gerar o gráfico</p>
+       </div>
+      </div>
+     </div>
+     <div id="dashboard-panel" class="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col">
+      <div class="p-3 border-b border-slate-700 bg-slate-800/30">
+       <h3 class="text-xs font-bold text-purple-400">📊 Dashboard</h3>
+      </div>
+      <div id="dashboard" class="flex-1 overflow-y-auto p-3 space-y-2">
+       <div class="text-xs text-slate-500 text-center py-6">
+        Adicione tarefas para ver estatísticas
+       </div>
+      </div>
+     </div>
     </div>
    </div>
   </div>
   <script>
-    // --- CONFIGURAÇÃO DA NUVEM ---
-    const BIN_ID = '6992f9d5d0ea881f40bea147'; 
-    const API_KEY = '$2a$10$T3C70qhYrKZMczxOir2xUeypvmxIZ89FRuioGyxBSh/gZorc4iBAy'; 
-    // -----------------------------
+    // Configurações do App
+    const defaultConfig = {
+      chart_title: 'Cronograma do Projeto',
+      background_color: '#0f172a',
+      surface_color: '#1e293b',
+      text_color: '#e2e8f0',
+      primary_action: '#6366f1',
+      secondary_action: '#a855f7'
+    };
 
-    let activities = [];
-    let collapsedPlans = {};
-    let dashboardVisible = true;
-
-    const today = new Date();
-    document.getElementById('today-date').textContent = today.toLocaleDateString('pt-BR');
-
-    // --- FUNÇÕES DE NUVEM (JSONBin) ---
+    let config = { ...defaultConfig };
     
-    async function saveData() {
-      const btn = document.getElementById('import-confirm');
-      const originalText = btn.textContent;
-      btn.textContent = 'Salvando na nuvem...';
-      
-      try {
-        const title = document.getElementById('plan-title').textContent;
-        const dataToSave = {
-          title: title,
-          updatedAt: new Date().toISOString(),
-          activities: activities
-        };
+    // Estado da Aplicação
+    let tasks = [];
+    let milestones = [];
+    let viewMode = 'months'; // Default now months
+    let dashboardVisible = true;
+    let editingTaskId = null;
+    let draggedTaskId = null;
+    let hideMilestonesActual = false;
+    let hideMilestonesPlanned = false;
+    let timelineData = null;
+    let draggedBarData = null;
 
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-          },
-          body: JSON.stringify(dataToSave)
-        });
+    // Credenciais JSONBin
+    let BIN_ID = localStorage.getItem('jsonbin_bin_id') || '';
+    let API_KEY = localStorage.getItem('jsonbin_api_key') || '';
 
-        if (!response.ok) throw new Error('Erro na API');
-        console.log('Dados salvos na nuvem com sucesso!');
-        
-      } catch (e) {
-        console.error('Erro ao salvar:', e);
-        alert('Erro ao salvar na nuvem. Verifique o console (F12).');
-      } finally {
-        btn.textContent = originalText;
-      }
+    const barColors = [
+      '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+      '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'
+    ];
+
+    // --- Integração JSONBin ---
+
+    function showLoading(show) {
+        const overlay = document.getElementById('loading-overlay');
+        if (show) overlay.classList.remove('hidden');
+        else overlay.classList.add('hidden');
     }
 
-    async function loadData() {
-      // Mostra um estado de carregamento
-      document.getElementById('list-content').innerHTML = '<div class="p-4 text-slate-400">🔄 Buscando dados mais recentes na nuvem...</div>';
-
-      try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          method: 'GET',
-          headers: {
-            'X-Master-Key': API_KEY
-          }
-        });
-
-        if (!response.ok) throw new Error('Erro ao buscar dados');
-
-        const result = await response.json();
-        const data = result.record; // O JSONBin retorna os dados dentro de "record"
-
-        if (data.title) {
-          document.getElementById('plan-title').textContent = data.title;
+    async function loadFromBin() {
+        if (!BIN_ID || !API_KEY) {
+            console.warn('Credenciais do JSONBin não configuradas.');
+            return;
         }
-        
-        if (data.activities && Array.isArray(data.activities)) {
-          // Reconstrói as datas
-          activities = data.activities.map(act => {
-            return {
-              ...act,
-              inicioDate: new Date(act.inicioDate),
-              fimDate: new Date(act.fimDate)
-            };
-          });
-          
-          renderList();
-          updateDashboard();
-          
-          // Feedback visual
-          const date = new Date(data.updatedAt);
-          showStatus(`☁️ Dados carregados da nuvem (${date.toLocaleTimeString()})`, false);
-        } else {
-             document.getElementById('list-content').innerHTML = '<div class="p-4 text-slate-400">Nenhum dado encontrado na nuvem ainda. Importe um Excel.</div>';
-        }
-      } catch (e) {
-        console.error('Erro ao carregar:', e);
-        document.getElementById('list-content').innerHTML = '<div class="p-4 text-red-400">Erro ao carregar dados. Verifique sua conexão.</div>';
-      }
-    }
 
-    // --- RESTO DO CÓDIGO ---
-
-    function formatDateBR(date) {
-      if (!date) return '';
-      const d = String(date.getDate()).padStart(2, '0');
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const y = date.getFullYear();
-      return `${d}/${m}/${y}`;
-    }
-
-    function groupByPlan(activities) {
-      const grouped = {};
-      activities.forEach(act => {
-        const plan = act.plano || 'Sem Plano';
-        if (!grouped[plan]) grouped[plan] = [];
-        grouped[plan].push(act);
-      });
-      return grouped;
-    }
-
-    function getAverageProgress(planActivities) {
-      if (planActivities.length === 0) return 0;
-      const sum = planActivities.reduce((acc, act) => acc + act.progresso, 0);
-      return Math.round(sum / planActivities.length);
-    }
-
-    function waitForXLSX(cb) {
-      if (typeof XLSX !== 'undefined') cb();
-      else setTimeout(() => waitForXLSX(cb), 50);
-    }
-
-    waitForXLSX(() => {
-      // Tenta carregar da nuvem ao iniciar
-      loadData();
-
-      document.getElementById('collapse-all-btn').addEventListener('click', () => {
-        const grouped = groupByPlan(activities);
-        Object.keys(grouped).forEach(planName => {
-          collapsedPlans[planName] = true;
-        });
-        renderList();
-      });
-
-      document.getElementById('expand-all-btn').addEventListener('click', () => {
-        const grouped = groupByPlan(activities);
-        Object.keys(grouped).forEach(planName => {
-          collapsedPlans[planName] = false;
-        });
-        renderList();
-      });
-
-      document.getElementById('toggle-dashboard-btn').addEventListener('click', () => {
-        dashboardVisible = !dashboardVisible;
-        const panel = document.getElementById('dashboard-panel');
-        const btn = document.getElementById('toggle-dashboard-btn');
-        if (dashboardVisible) {
-          panel.classList.remove('hidden');
-          btn.textContent = '📊 Ocultar Dashboard';
-        } else {
-          panel.classList.add('hidden');
-          btn.textContent = '📊 Mostrar Dashboard';
-        }
-      });
-
-      document.getElementById('import-btn').addEventListener('click', () => {
-        document.getElementById('import-modal').classList.remove('hidden');
-      });
-
-      document.getElementById('import-cancel').addEventListener('click', () => {
-        document.getElementById('import-modal').classList.add('hidden');
-      });
-
-      document.getElementById('excel-file').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          try {
-            const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-            const preview = document.getElementById('import-preview');
-            if (rows.length === 0) {
-              preview.innerHTML = '<span class="text-red-400">❌ Nenhum dado na planilha</span>';
-            } else {
-              const cols = Object.keys(rows[0]);
-              preview.innerHTML = `<div class="mb-3"><strong class="text-indigo-300">✓ ${rows.length} linhas encontradas</strong><br><strong class="text-purple-300">Colunas:</strong> ${cols.join(', ')}</div>`;
-            }
-            preview.classList.remove('hidden');
-          } catch (err) {
-            const preview = document.getElementById('import-preview');
-            preview.innerHTML = `<span class="text-red-400">❌ ${err.message}</span>`;
-            preview.classList.remove('hidden');
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      });
-
-      document.getElementById('import-confirm').addEventListener('click', async () => {
-        const file = document.getElementById('excel-file').files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (evt) => {
-          try {
-            const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-            
-            const newTitle = ws['B1']?.v || 'Cronograma';
-            document.getElementById('plan-title').textContent = newTitle;
-
-            const parseDate = (val) => {
-              if (!val) return null;
-              const s = String(val).trim();
-              let m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-              if (m) return new Date(m[3], m[2]-1, m[1]);
-              m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-              if (m) return new Date(m[1], m[2]-1, m[3]);
-              const num = parseFloat(s);
-              if (!isNaN(num) && num > 0) return new Date((num - 25569) * 86400 * 1000);
-              return null;
-            };
-
-            const getCol = (obj, names) => {
-              for (let name of names) {
-                for (let key in obj) {
-                  if (key.toLowerCase().trim() === name.toLowerCase().trim()) return String(obj[key]).trim();
+        showLoading(true);
+        try {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: {
+                    'X-Master-Key': API_KEY,
+                    'X-Bin-Meta': false
                 }
-              }
-              return '';
-            };
+            });
 
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-
-            activities = rows.map(r => {
-              const inicioDate = parseDate(getCol(r, ['inicio', 'start', 'data inicio', 'início']));
-              const fimDate = parseDate(getCol(r, ['fim', 'end', 'data fim']));
-              const progresso = Math.min(100, Math.max(0, parseInt(getCol(r, ['progresso', 'progress', 'percentual'])) || 0));
-              const isAtrasada = progresso < 100 && fimDate < hoje;
-              return {
-                plano: getCol(r, ['plano', 'plan', 'fase', 'phase']) || 'Sem Plano',
-                atividade: getCol(r, ['atividade', 'activity', 'nome', 'name']) || '',
-                tag: getCol(r, ['tag', 'subtag']) || '',
-                inicio: inicioDate ? formatDateBR(inicioDate) : '',
-                fim: fimDate ? formatDateBR(fimDate) : '',
-                progresso: progresso,
-                atrasada: isAtrasada,
-                inicioDate: inicioDate,
-                fimDate: fimDate
-              };
-            }).filter(a => a.atividade && a.inicioDate && a.fimDate).sort((a, b) => a.inicioDate - b.inicioDate);
-
-            if (activities.length === 0) {
-              showStatus('❌ Nenhuma atividade válida', true);
-              return;
+            if (response.ok) {
+                const data = await response.json();
+                tasks = Array.isArray(data.tasks) ? data.tasks : [];
+                milestones = Array.isArray(data.milestones) ? data.milestones : [];
+                refreshAll();
+            } else {
+                console.error('Erro ao carregar dados:', response.status);
+                alert('Erro ao carregar dados. Verifique suas credenciais.');
             }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+        } finally {
+            showLoading(false);
+        }
+    }
 
-            renderList();
-            updateDashboard();
+    async function saveToBin() {
+        if (!BIN_ID || !API_KEY) {
+            console.warn('Modo offline (sem credenciais)');
+            refreshAll(); // Apenas atualiza UI
+            return;
+        }
+
+        showLoading(true);
+        try {
+            const payload = { tasks, milestones };
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                console.error('Erro ao salvar:', response.status);
+                alert('Erro ao salvar alterações.');
+            }
+            // Atualiza UI de qualquer forma
+            refreshAll();
+        } catch (error) {
+            console.error('Erro de rede ao salvar:', error);
+            refreshAll();
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // --- Gerenciamento de Configurações ---
+
+    document.getElementById('config-btn').addEventListener('click', () => {
+        const newKey = prompt('Insira sua X-Master-Key do JSONBin:', API_KEY);
+        const newBin = prompt('Insira seu Bin ID do JSONBin:', BIN_ID);
+        
+        if (newKey !== null && newBin !== null) {
+            API_KEY = newKey.trim();
+            BIN_ID = newBin.trim();
+            localStorage.setItem('jsonbin_api_key', API_KEY);
+            localStorage.setItem('jsonbin_bin_id', BIN_ID);
             
-            // AQUI SALVAMOS NA NUVEM
-            await saveData();
-            
-            document.getElementById('import-modal').classList.add('hidden');
-            showStatus(`✅ Importado e salvo na nuvem!`, false);
-          } catch (err) {
-            showStatus(`❌ ${err.message}`, true);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      });
+            if (API_KEY && BIN_ID) {
+                loadFromBin();
+            }
+        }
     });
 
-    function showStatus(msg, isError) {
-      const el = document.getElementById('import-status');
-      el.textContent = msg;
-      el.className = isError ? 'mt-4 p-3 rounded text-sm bg-red-500/20 text-red-400 border border-red-500/50' : 'mt-4 p-3 rounded text-sm bg-green-500/20 text-green-400 border border-green-500/50';
-      el.classList.remove('hidden');
+    // --- UI Update Helpers ---
+
+    function refreshAll() {
+        updateTaskList();
+        updateMilestoneList();
+        updateTaskSelect();
+        updateParentTaskSelect();
+        renderGantt();
+        updateDashboard();
     }
 
-    function togglePlan(planName) {
-      collapsedPlans[planName] = !collapsedPlans[planName];
-      renderList();
+    // --- Init ---
+
+    function initApp() {
+        if (API_KEY && BIN_ID) {
+            loadFromBin();
+        } else {
+            console.log("Iniciando sem dados remotos. Configure para salvar.");
+            refreshAll();
+        }
     }
 
-    function renderList() {
-      const listContent = document.getElementById('list-content');
-      const grouped = groupByPlan(activities);
-      const planNames = Object.keys(grouped).sort();
+    // --- Event Handlers & Logic (Refatorado para usar funções locais) ---
 
-      listContent.innerHTML = planNames.map(planName => {
-        const planActivities = grouped[planName];
-        const isCollapsed = collapsedPlans[planName] || false;
-        const avgProgress = getAverageProgress(planActivities);
+    function applyConfig() {
+      document.body.style.backgroundColor = config.background_color;
+      document.body.style.color = config.text_color;
+      document.getElementById('chart-title').textContent = config.chart_title || defaultConfig.chart_title;
+      renderGantt();
+      updateDashboard();
+    }
 
+    document.getElementById('toggle-dashboard').addEventListener('click', () => {
+      dashboardVisible = !dashboardVisible;
+      const dashboardPanel = document.getElementById('dashboard-panel');
+      const chartSection = document.getElementById('gantt-chart').parentElement;
+      
+      if (dashboardVisible) {
+        dashboardPanel.classList.remove('hidden');
+        chartSection.classList.add('lg:col-span-3');
+        chartSection.classList.remove('lg:col-span-4');
+      } else {
+        dashboardPanel.classList.add('hidden');
+        chartSection.classList.remove('lg:col-span-3');
+        chartSection.classList.add('lg:col-span-4');
+      }
+    });
+
+    document.getElementById('toggle-milestones-actual').addEventListener('click', () => {
+      hideMilestonesActual = !hideMilestonesActual;
+      const btn = document.getElementById('toggle-milestones-actual');
+      if (hideMilestonesActual) {
+        btn.textContent = '✔️ Mostrar Realizados';
+        btn.classList.add('bg-green-600/50', 'border-green-500');
+      } else {
+        btn.textContent = '✔️ Ocultar Realizados';
+        btn.classList.remove('bg-green-600/50', 'border-green-500');
+      }
+      renderGantt();
+    });
+
+    document.getElementById('toggle-milestones-planned').addEventListener('click', () => {
+      hideMilestonesPlanned = !hideMilestonesPlanned;
+      const btn = document.getElementById('toggle-milestones-planned');
+      if (hideMilestonesPlanned) {
+        btn.textContent = '📅 Mostrar Previstos';
+        btn.classList.add('bg-blue-600/50', 'border-blue-500');
+      } else {
+        btn.textContent = '📅 Ocultar Previstos';
+        btn.classList.remove('bg-blue-600/50', 'border-blue-500');
+      }
+      renderGantt();
+    });
+
+    document.getElementById('tab-tasks').addEventListener('click', () => {
+      document.getElementById('tasks-section').classList.remove('hidden');
+      document.getElementById('milestones-section').classList.add('hidden');
+      document.getElementById('tab-tasks').classList.add('active');
+      document.getElementById('tab-milestones').classList.remove('active');
+    });
+
+    document.getElementById('tab-milestones').addEventListener('click', () => {
+      document.getElementById('tasks-section').classList.add('hidden');
+      document.getElementById('milestones-section').classList.remove('hidden');
+      document.getElementById('tab-tasks').classList.remove('active');
+      document.getElementById('tab-milestones').classList.add('active');
+    });
+
+    document.getElementById('task-level').addEventListener('change', (e) => {
+      const parentContainer = document.getElementById('parent-task-container');
+      if (e.target.value === 'secundaria') {
+        parentContainer.classList.remove('hidden');
+      } else {
+        parentContainer.classList.add('hidden');
+      }
+    });
+
+    // Updated View Buttons Handlers
+    document.getElementById('view-months').addEventListener('click', () => {
+      viewMode = 'months';
+      updateViewButtons();
+      renderGantt();
+    });
+
+    document.getElementById('view-elapsed').addEventListener('click', () => {
+      viewMode = 'elapsed';
+      updateViewButtons();
+      renderGantt();
+    });
+
+    function updateViewButtons() {
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      if (viewMode === 'months') document.getElementById('view-months').classList.add('active');
+      if (viewMode === 'elapsed') document.getElementById('view-elapsed').classList.add('active');
+    }
+
+    function updateTaskSelect() {
+      const select = document.getElementById('milestone-task');
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">Selecione uma tarefa...</option>';
+      
+      tasks.forEach(task => {
+        const option = document.createElement('option');
+        option.value = task.id;
+        option.textContent = task.tarefa;
+        select.appendChild(option);
+      });
+      
+      select.value = currentValue;
+    }
+
+    function updateParentTaskSelect() {
+      const select = document.getElementById('task-parent');
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">Selecione a tarefa mestra...</option>';
+      
+      tasks.filter(t => t.nivel === 'principal').forEach(task => {
+        const option = document.createElement('option');
+        option.value = task.id;
+        option.textContent = task.tarefa;
+        select.appendChild(option);
+      });
+      
+      select.value = currentValue;
+    }
+
+    window.toggleEditTask = (taskId) => {
+      if (editingTaskId === taskId) {
+        editingTaskId = null;
+      } else {
+        editingTaskId = taskId;
+      }
+      updateTaskList();
+      updateMilestoneList();
+    };
+
+    window.saveTaskEdit = async (taskId, fields) => {
+      // Verifica tarefas
+      let taskIndex = tasks.findIndex(t => t.id === taskId);
+      if (taskIndex !== -1) {
+          tasks[taskIndex] = { ...tasks[taskIndex], ...fields };
+          editingTaskId = null;
+          await saveToBin();
+          return;
+      }
+
+      // Verifica marcos
+      let mIndex = milestones.findIndex(m => m.id === taskId);
+      if (mIndex !== -1) {
+          milestones[mIndex] = { ...milestones[mIndex], ...fields };
+          editingTaskId = null;
+          await saveToBin();
+          return;
+      }
+    };
+
+    window.startDrag = (taskId) => {
+      draggedTaskId = taskId;
+      const elem = document.getElementById(`task-${taskId}`);
+      if (elem) elem.classList.add('dragging');
+    };
+
+    window.endDrag = () => {
+      if (draggedTaskId) {
+        const elem = document.getElementById(`task-${draggedTaskId}`);
+        if (elem) elem.classList.remove('dragging');
+        draggedTaskId = null;
+      }
+    };
+
+    window.dragOver = (e) => {
+      e.preventDefault();
+      const elem = e.currentTarget;
+      elem.classList.add('drag-over');
+    };
+
+    window.dragLeave = (e) => {
+      const elem = e.currentTarget;
+      elem.classList.remove('drag-over');
+    };
+
+    window.dropTask = async (e, targetTaskId) => {
+      e.preventDefault();
+      const elem = e.currentTarget;
+      elem.classList.remove('drag-over');
+
+      if (!draggedTaskId || draggedTaskId === targetTaskId) return;
+
+      const draggedTaskIdx = tasks.findIndex(t => t.id === draggedTaskId);
+      const targetTaskIdx = tasks.findIndex(t => t.id === targetTaskId);
+
+      if (draggedTaskIdx === -1 || targetTaskIdx === -1) return;
+
+      // Troca a ordem visual/numérica
+      const tempOrdem = tasks[draggedTaskIdx].ordem;
+      tasks[draggedTaskIdx].ordem = tasks[targetTaskIdx].ordem;
+      tasks[targetTaskIdx].ordem = tempOrdem;
+
+      // Reordena o array para consistência
+      tasks.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+      draggedTaskId = null;
+      await saveToBin();
+    };
+
+    window.toggleVisibility = async (taskId) => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      task.visivel = !task.visivel;
+      await saveToBin();
+    };
+
+    // Lógica de arrastar a barra no gráfico
+    window.startBarDrag = (e, taskId, isStart) => {
+      e.stopPropagation();
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      draggedBarData = { taskId, task: { ...task }, isStart };
+      const bar = e.currentTarget;
+      bar.classList.add('dragging');
+
+      const handleMouseMove = (moveEvent) => {
+        if (!timelineData) return;
+        
+        const container = document.getElementById('gantt-chart');
+        const containerRect = container.getBoundingClientRect();
+        // Width fixed for month/elapsed views
+        const dayWidth = 50; 
+        
+        // Ajuste relativo ao scroll do container
+        const scrollLeft = container.scrollLeft;
+        const offsetX = (moveEvent.clientX - containerRect.left + scrollLeft);
+        const dayIndex = Math.max(0, Math.round(offsetX / dayWidth));
+        
+        let newDate = new Date(timelineData.minDate);
+        
+        // Both modes use monthly increments logic
+        newDate.setMonth(newDate.getMonth() + dayIndex);
+        
+        // Formato YYYY-MM-DD
+        const dateStr = newDate.toISOString().split('T')[0];
+        
+        if (isStart) {
+          draggedBarData.task.inicio = dateStr;
+          if (new Date(dateStr) > new Date(draggedBarData.task.fim)) {
+            draggedBarData.task.fim = dateStr;
+          }
+        } 
+        
+        const tIndex = tasks.findIndex(t => t.id === draggedBarData.taskId);
+        if(tIndex !== -1) {
+            tasks[tIndex].inicio = draggedBarData.task.inicio;
+            tasks[tIndex].fim = draggedBarData.task.fim;
+        }
+        
+        renderGantt();
+      };
+
+      const handleMouseUp = async () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        
+        bar.classList.remove('dragging');
+        
+        // Salva definitivo
+        await saveToBin();
+        draggedBarData = null;
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const taskForm = document.getElementById('task-form');
+    taskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const level = document.getElementById('task-level').value;
+      const name = document.getElementById('task-name').value.trim();
+      const start = document.getElementById('task-start').value;
+      const end = document.getElementById('task-end').value;
+      const progress = Math.min(100, Math.max(0, parseInt(document.getElementById('task-progress').value) || 0));
+      const tags = document.getElementById('task-tags').value.trim();
+      const parent = level === 'secundaria' ? document.getElementById('task-parent').value : '';
+
+      if (!name || !start || !end) return;
+      if (level === 'secundaria' && !parent) {
+          alert("Selecione uma tarefa mestra para a tarefa secundária.");
+          return;
+      }
+
+      const newTask = {
+        id: Date.now().toString(),
+        tarefa: name,
+        inicio: start,
+        fim: end,
+        progresso: progress,
+        ordem: tasks.length,
+        visivel: true,
+        tags: tags,
+        nivel: level,
+        tarefa_pai: parent
+      };
+
+      tasks.push(newTask);
+      
+      // Limpa form
+      taskForm.reset();
+      document.getElementById('task-progress').value = '0';
+      
+      await saveToBin();
+    });
+
+    const milestoneForm = document.getElementById('milestone-form');
+    milestoneForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('milestone-name').value.trim();
+      const taskId = document.getElementById('milestone-task').value;
+      const datePlanned = document.getElementById('milestone-date-planned').value;
+      const dateActual = document.getElementById('milestone-date-actual').value;
+
+      if (!name || !taskId || !datePlanned) return;
+
+      const newMilestone = {
+        id: Date.now().toString(),
+        tarefa: name,
+        tarefa_id: taskId,
+        data_prevista: datePlanned,
+        data_realizada: dateActual || null,
+        ordem: milestones.length
+      };
+
+      milestones.push(newMilestone);
+      milestoneForm.reset();
+      await saveToBin();
+    });
+
+    document.getElementById('download-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('download-btn');
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      
+      try {
+        const canvas = await html2canvas(document.getElementById('gantt-chart'), {
+          backgroundColor: config.background_color,
+          scale: 2,
+          logging: false
+        });
+        
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = `gantt-chart-${new Date().toISOString().split('T')[0]}.png`;
+        link.click();
+      } catch (error) {
+        console.error('Erro:', error);
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    });
+
+    window.deleteTask = async (id) => {
+      if(!confirm("Tem certeza que deseja excluir esta tarefa?")) return;
+      
+      // Remove tarefa
+      tasks = tasks.filter(t => t.id !== id);
+      // Remove sub-tarefas órfãs
+      tasks = tasks.filter(t => t.tarefa_pai !== id);
+      // Remove marcos associados
+      milestones = milestones.filter(m => m.tarefa_id !== id);
+      
+      await saveToBin();
+    };
+
+    window.deleteMilestone = async (id) => {
+      if(!confirm("Tem certeza que deseja excluir este marco?")) return;
+      milestones = milestones.filter(m => m.id !== id);
+      await saveToBin();
+    };
+
+    window.updateTaskProgress = async (id, value) => {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      task.progresso = parseInt(value);
+      // Debounce save se necessário, mas aqui faremos direto para simplificar
+      await saveToBin();
+    };
+
+    // --- Renderização (Lógica original mantida e adaptada) ---
+
+    function updateTaskList() {
+      const listContainer = document.getElementById('task-list');
+      
+      if (tasks.length === 0) {
+        listContainer.innerHTML = '<p class="text-slate-500 text-center py-3">Nenhuma tarefa adicionada</p>';
+        return;
+      }
+
+      // Ordena por ordem definida
+      tasks.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+      const principalTasks = tasks.filter(t => t.nivel === 'principal');
+      
+      listContainer.innerHTML = principalTasks.map((task, idx) => {
+        const subtasks = tasks.filter(t => t.tarefa_pai === task.id);
+        const isEditing = editingTaskId === task.id;
+        const isHidden = !task.visivel;
+        
         return `
-          <div class="plan-group">
-            <div class="plan-folder" onclick="togglePlan('${planName.replace(/'/g, "\\'")}')">
-              <div class="plan-folder-title">
-                ${isCollapsed ? '📂' : '📁'} ${planName}
-                <span class="plan-count-badge">${planActivities.length}</span>
-              </div>
-              <div class="plan-folder-empty"></div>
-              <div class="plan-folder-empty"></div>
-              <div class="plan-folder-empty"></div>
-              <div class="plan-folder-empty"></div>
-            </div>
-            ${isCollapsed ? `
-              <div class="plan-progress-container">
-                <div class="plan-progress-label">${avgProgress}%</div>
-                <div class="plan-progress-bar">
-                  <div class="plan-progress-fill" style="width: ${avgProgress}%"></div>
+          <div id="task-${task.id}" class="bg-slate-700/30 rounded p-2 task-level-main ${isEditing ? 'edit-mode' : ''} ${isHidden ? 'hidden-item' : ''}" draggable="true" ondragstart="startDrag('${task.id}')" ondragend="endDrag()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTask(event, '${task.id}')">
+            <div class="flex justify-between items-start mb-1">
+              <div class="flex-1 flex items-start gap-2">
+                <div class="drag-handle mt-0.5">⋮</div>
+                <div class="flex-1">
+                  ${isEditing ? `
+                    <input type="text" id="edit-name-${task.id}" value="${task.tarefa}" class="w-full px-2 py-1 bg-slate-700 border border-indigo-500 rounded text-xs text-slate-100 mb-1">
+                    <div class="flex gap-1 mb-1">
+                      <input type="date" id="edit-inicio-${task.id}" value="${task.inicio}" class="flex-1 px-1 py-0.5 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                      <input type="date" id="edit-fim-${task.id}" value="${task.fim}" class="flex-1 px-1 py-0.5 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                    </div>
+                    <input type="text" id="edit-tags-${task.id}" value="${task.tags || ''}" placeholder="Tags" class="w-full px-2 py-1 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                  ` : `
+                    <p class="font-bold text-slate-100 text-xs">🎯 ${task.tarefa}</p>
+                    ${task.tags ? `<p class="text-xs text-slate-400 mt-0.5"><span class="task-tag">${task.tags.split(',').map(t => t.trim()).join('</span><span class="task-tag">')}</span></p>` : ''}
+                    <p class="text-xs text-slate-400">${task.inicio} → ${task.fim}</p>
+                  `}
                 </div>
+              </div>
+              <div class="flex gap-1">
+                ${isEditing ? `
+                  <button onclick="saveTaskEdit('${task.id}', { tarefa: document.getElementById('edit-name-${task.id}').value, inicio: document.getElementById('edit-inicio-${task.id}').value, fim: document.getElementById('edit-fim-${task.id}').value, tags: document.getElementById('edit-tags-${task.id}').value })" class="px-1.5 py-0.5 bg-green-600/80 hover:bg-green-700 rounded text-white text-xs">✓</button>
+                  <button onclick="toggleEditTask('${task.id}')" class="px-1.5 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                ` : `
+                  <button onclick="toggleVisibility('${task.id}')" class="px-1.5 py-0.5 ${isHidden ? 'bg-yellow-600/80 hover:bg-yellow-700' : 'bg-slate-600/80 hover:bg-slate-700'} rounded text-white text-xs">${isHidden ? '👁️‍🗨️' : '👁️'}</button>
+                  <button onclick="toggleEditTask('${task.id}')" class="px-1.5 py-0.5 bg-blue-600/80 hover:bg-blue-700 rounded text-white text-xs">✎</button>
+                  <button onclick="deleteTask('${task.id}')" class="px-1.5 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                `}
+              </div>
+            </div>
+            <div class="flex gap-1 items-center mb-1 ml-6">
+              <input type="range" min="0" max="100" value="${task.progresso}" onchange="updateTaskProgress('${task.id}', this.value)" class="flex-1">
+              <span class="text-slate-300 text-xs w-6">${task.progresso}%</span>
+            </div>
+            
+            ${subtasks.length > 0 ? `
+              <div class="mt-2 space-y-1">
+                ${subtasks.map(sub => {
+                  const isEditingSub = editingTaskId === sub.id;
+                  const isSubHidden = !sub.visivel;
+                  return `
+                    <div id="task-${sub.id}" class="bg-slate-700/40 rounded p-1.5 task-level-sub ${isEditingSub ? 'edit-mode' : ''} ${isSubHidden ? 'hidden-item' : ''}" draggable="true" ondragstart="startDrag('${sub.id}')" ondragend="endDrag()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTask(event, '${sub.id}')">
+                      <div class="flex justify-between items-start">
+                        <div class="flex-1 flex items-start gap-1">
+                          <div class="drag-handle mt-0.5 text-xs">⋮</div>
+                          <div class="flex-1">
+                            ${isEditingSub ? `
+                              <input type="text" id="edit-name-${sub.id}" value="${sub.tarefa}" class="w-full px-2 py-1 bg-slate-700 border border-indigo-500 rounded text-xs text-slate-100 mb-1">
+                              <div class="flex gap-1 mb-1">
+                                <input type="date" id="edit-inicio-${sub.id}" value="${sub.inicio}" class="flex-1 px-1 py-0.5 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                                <input type="date" id="edit-fim-${sub.id}" value="${sub.fim}" class="flex-1 px-1 py-0.5 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                              </div>
+                            ` : `
+                              <p class="font-semibold text-slate-200 text-xs">📌 ${sub.tarefa}</p>
+                              <p class="text-xs text-slate-400">${sub.inicio} → ${sub.fim}</p>
+                            `}
+                          </div>
+                        </div>
+                        <div class="flex gap-1">
+                          ${isEditingSub ? `
+                            <button onclick="saveTaskEdit('${sub.id}', { tarefa: document.getElementById('edit-name-${sub.id}').value, inicio: document.getElementById('edit-inicio-${sub.id}').value, fim: document.getElementById('edit-fim-${sub.id}').value })" class="px-1 py-0.5 bg-green-600/80 hover:bg-green-700 rounded text-white text-xs">✓</button>
+                            <button onclick="toggleEditTask('${sub.id}')" class="px-1 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                          ` : `
+                            <button onclick="toggleVisibility('${sub.id}')" class="px-1 py-0.5 ${isSubHidden ? 'bg-yellow-600/80 hover:bg-yellow-700' : 'bg-slate-600/80 hover:bg-slate-700'} rounded text-white text-xs">${isSubHidden ? '👁️‍🗨️' : '👁️'}</button>
+                            <button onclick="toggleEditTask('${sub.id}')" class="px-1 py-0.5 bg-blue-600/80 hover:bg-blue-700 rounded text-white text-xs">✎</button>
+                            <button onclick="deleteTask('${sub.id}')" class="px-1 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                          `}
+                        </div>
+                      </div>
+                      <div class="flex gap-1 items-center mt-1 ml-6">
+                        <input type="range" min="0" max="100" value="${sub.progresso}" onchange="updateTaskProgress('${sub.id}', this.value)" class="flex-1">
+                        <span class="text-slate-300 text-xs w-6">${sub.progresso}%</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
               </div>
             ` : ''}
-            ${planActivities.map((act, idx) => {
-              const globalIdx = activities.indexOf(act);
-              return `
-                <div class="list-row ${isCollapsed ? 'hidden' : ''}" data-global-idx="${globalIdx}" data-plan="${planName}" onmouseenter="highlightActivityRow(${globalIdx})" onmouseleave="unhighlightActivityRow()">
-                  <div class="list-cell">
-                    <div class="activity-name">${act.atividade}</div>
-                    <div class="activity-phase">${act.tag || '—'}</div>
-                  </div>
-                  <div class="list-cell">
-                    <div class="cell-date">${act.inicio}</div>
-                  </div>
-                  <div class="list-cell">
-                    <div class="cell-date">${act.fim}</div>
-                  </div>
-                  <div class="list-cell">
-                    <div class="cell-progress">${act.progresso}%</div>
-                  </div>
-                  <div class="list-cell">
-                    <div class="cell-status ${act.atrasada ? 'status-delayed' : 'status-on-time'}">
-                      ${act.atrasada ? '⚠️ Atrasada' : '✅ No prazo'}
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
           </div>
         `;
       }).join('');
     }
 
-    function highlightActivityRow(globalIdx) {
-      document.querySelectorAll('.list-row').forEach((el) => {
-        if (parseInt(el.dataset.globalIdx) === globalIdx) {
-          el.classList.add('highlighted');
-          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-      });
-      highlightDashboardItem(globalIdx);
-    }
+    function updateMilestoneList() {
+      const listContainer = document.getElementById('milestone-list');
+      
+      if (milestones.length === 0) {
+        listContainer.innerHTML = '<p class="text-slate-500 text-center py-3">Nenhum marco adicionado</p>';
+        return;
+      }
 
-    function unhighlightActivityRow() {
-      document.querySelectorAll('.list-row').forEach(el => el.classList.remove('highlighted'));
-      document.querySelectorAll('.dashboard-item').forEach(el => el.classList.remove('highlighted'));
-    }
-
-    function highlightDashboardItem(globalIdx) {
-      document.querySelectorAll('.dashboard-item').forEach((el) => {
-        if (parseInt(el.dataset.globalIdx) === globalIdx) {
-          el.classList.add('highlighted');
-        }
-      });
+      listContainer.innerHTML = milestones.map((m) => {
+        const task = tasks.find(t => t.id === m.tarefa_id);
+        const taskName = task ? task.tarefa : 'Tarefa removida';
+        const isEditing = editingTaskId === m.id;
+        
+        const daysDiff = m.data_realizada 
+          ? Math.floor((new Date(m.data_realizada) - new Date(m.data_prevista)) / (1000 * 60 * 60 * 24))
+          : null;
+        
+        const statusIcon = !daysDiff ? '⏱️' : daysDiff === 0 ? '✅' : daysDiff > 0 ? '⚠️' : '🚀';
+        
+        return `
+          <div class="bg-slate-700/50 p-2 rounded ${isEditing ? 'edit-mode' : ''}">
+            <div class="flex justify-between items-start mb-1">
+              <div class="flex-1">
+                ${isEditing ? `
+                  <input type="text" id="edit-name-${m.id}" value="${m.tarefa}" class="w-full px-2 py-1 bg-slate-700 border border-indigo-500 rounded text-xs text-slate-100 mb-1">
+                  <input type="date" id="edit-prevista-${m.id}" value="${m.data_prevista}" class="w-full px-2 py-1 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100 mb-1">
+                  <input type="date" id="edit-realizada-${m.id}" value="${m.data_realizada || ''}" placeholder="Data realizada" class="w-full px-2 py-1 bg-slate-700 border border-slate-500 rounded text-xs text-slate-100">
+                ` : `
+                  <p class="font-semibold text-slate-200 text-xs">${m.tarefa}</p>
+                  <p class="text-slate-400 text-xs">${taskName}</p>
+                  <p class="text-xs text-slate-500 mt-1">📅 Prevista: ${m.data_prevista}</p>
+                  ${m.data_realizada ? `<p class="text-xs text-slate-500">✔️ Realizada: ${m.data_realizada} ${statusIcon}</p>` : '<p class="text-xs text-amber-400">Pendente realização</p>'}
+                  ${daysDiff !== null && daysDiff !== 0 ? `<p class="text-xs ${daysDiff > 0 ? 'text-red-400' : 'text-green-400'}">Diferença: ${daysDiff} dias ${daysDiff > 0 ? 'atrasado' : 'adiantado'}</p>` : ''}
+                `}
+              </div>
+              <div class="flex gap-1">
+                ${isEditing ? `
+                  <button onclick="saveTaskEdit('${m.id}', { tarefa: document.getElementById('edit-name-${m.id}').value, data_prevista: document.getElementById('edit-prevista-${m.id}').value, data_realizada: document.getElementById('edit-realizada-${m.id}').value || null })" class="px-1 py-0.5 bg-green-600/80 hover:bg-green-700 rounded text-white text-xs">✓</button>
+                  <button onclick="toggleEditTask('${m.id}')" class="px-1 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                ` : `
+                  <button onclick="toggleEditTask('${m.id}')" class="px-1 py-0.5 bg-blue-600/80 hover:bg-blue-700 rounded text-white text-xs">✎</button>
+                  <button onclick="deleteMilestone('${m.id}')" class="px-1 py-0.5 bg-red-600/80 hover:bg-red-700 rounded text-white text-xs">✕</button>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function updateDashboard() {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
+      const dashboardContainer = document.getElementById('dashboard');
+      const principalTasks = tasks.filter(t => t.visivel !== false && t.nivel === 'principal');
 
-      const grouped = groupByPlan(activities);
-      const planNames = Object.keys(grouped).sort();
+      if (principalTasks.length === 0) {
+        dashboardContainer.innerHTML = '<div class="text-xs text-slate-500 text-center py-6">Nenhuma tarefa principal</div>';
+        return;
+      }
 
-      // Calcular totais gerais
-      const totalDelayed = activities.filter(a => a.atrasada).length;
-      const totalUpcoming = activities.filter(a => {
-        const days = Math.ceil((a.inicioDate - hoje) / (1000*60*60*24));
-        return days >= 0 && days <= 5;
-      }).length;
-
-      // Renderizar visão geral
-      const overviewHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-          <div class="dashboard-card" style="border-left: 4px solid #ef4444; text-align: center;">
-            <div style="font-size: 28px; font-weight: bold; color: #ef4444;">${totalDelayed}</div>
-            <div style="font-size: 11px; color: #a78bfa; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">🔴 Em Atraso</div>
-          </div>
-          <div class="dashboard-card" style="border-left: 4px solid #3b82f6; text-align: center;">
-            <div style="font-size: 28px; font-weight: bold; color: #3b82f6;">${totalUpcoming}</div>
-            <div style="font-size: 11px; color: #a78bfa; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">🔵 Próximos 5 Dias</div>
-          </div>
-        </div>
-        <div style="height: 1px; background: rgba(99, 102, 241, 0.2); margin-bottom: 16px;"></div>
-      `;
-
-      document.getElementById('dashboard-overview').innerHTML = overviewHTML;
-
-      let dashboardHTML = '';
-
-      planNames.forEach(planName => {
-        const planActivities = grouped[planName];
-
-        // Atividades atrasadas do plano
-        const delayedInPlan = planActivities.filter(a => a.atrasada);
-        const delayedHTML = delayedInPlan.map((a) => {
-          const globalIdx = activities.indexOf(a);
-          return `
-            <div class="dashboard-item delayed" data-global-idx="${globalIdx}" data-plan="${planName}" onmouseenter="highlightActivityRow(${globalIdx})" onmouseleave="unhighlightActivityRow()">
-              <div class="dashboard-item-name">${a.atividade}</div>
-              <div class="dashboard-item-phase">${a.tag || '—'}</div>
-            </div>
-          `;
-        }).join('');
-
-        // Próximas atividades do plano
-        const upcomingInPlan = planActivities.filter(a => {
-          const days = Math.ceil((a.inicioDate - hoje) / (1000*60*60*24));
-          return days >= 0 && days <= 5;
-        });
-
-        const upcomingHTML = upcomingInPlan.map((a) => {
-          const globalIdx = activities.indexOf(a);
-          return `
-            <div class="dashboard-item upcoming" data-global-idx="${globalIdx}" data-plan="${planName}" onmouseenter="highlightActivityRow(${globalIdx})" onmouseleave="unhighlightActivityRow()">
-              <div class="dashboard-item-name">${a.atividade}</div>
-              <div class="dashboard-item-phase">${a.tag || '—'}</div>
-            </div>
-          `;
-        }).join('');
-
-        if (delayedInPlan.length > 0 || upcomingInPlan.length > 0) {
-          dashboardHTML += `
-            <div class="dashboard-plan-section">
-              <div class="dashboard-plan-header">📋 ${planName}</div>
-          `;
-
-          if (delayedInPlan.length > 0) {
-            dashboardHTML += `
-              <div class="dashboard-card">
-                <div class="dashboard-title">🔴 Atrasadas (${delayedInPlan.length})</div>
-                ${delayedHTML}
-              </div>
-            `;
-          }
-
-          if (upcomingInPlan.length > 0) {
-            dashboardHTML += `
-              <div class="dashboard-card">
-                <div class="dashboard-title">📅 Próximos 5 dias (${upcomingInPlan.length})</div>
-                ${upcomingHTML}
-              </div>
-            `;
-          }
-
-          dashboardHTML += `</div>`;
+      let dashboardHTML = '<div class="text-xs font-bold text-purple-400 mb-3">📊 Estatísticas por Tarefa</div>';
+      
+      principalTasks.forEach((task, idx) => {
+        const subtasks = tasks.filter(t => t.tarefa_pai === task.id && t.visivel !== false);
+        const totalSub = subtasks.length;
+        const completedSub = subtasks.filter(t => t.progresso === 100).length;
+        const inProgressSub = subtasks.filter(t => t.progresso > 0 && t.progresso < 100).length;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(task.inicio);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(task.fim);
+        end.setHours(0, 0, 0, 0);
+        
+        let statusIcon = '🟡';
+        let statusText = 'Pendente';
+        if (today < start) {
+          statusIcon = '⏳';
+          statusText = 'Não iniciado';
+        } else if (today > end) {
+          statusIcon = task.progresso === 100 ? '✅' : '🔴';
+          statusText = task.progresso === 100 ? 'Concluído' : 'Atrasado';
+        } else {
+          statusIcon = task.progresso === 100 ? '✅' : '🔵';
+          statusText = task.progresso === 100 ? 'Concluído' : 'Em andamento';
         }
+        
+        const daysPlanned = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const progressRate = task.progresso || 0;
+        const barColor = barColors[idx % barColors.length];
+        
+        dashboardHTML += `
+          <div class="stat-card border-l-4" style="border-left-color: ${barColor};">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold truncate" style="color: ${barColor};">🎯 ${task.tarefa}</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded" style="background: ${barColor}20; color: ${barColor};">${statusIcon} ${statusText}</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <div class="timeline-label">📅 Duração</div>
+                <div class="timeline-value">${daysPlanned} dias</div>
+              </div>
+              <div>
+                <div class="timeline-label">🗓️ Período</div>
+                <div class="timeline-value text-xs">${task.inicio} a ${task.fim}</div>
+              </div>
+            </div>
+            
+            <div class="mb-2">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-slate-400">Progresso</span>
+                <span class="text-xs font-bold" style="color: ${barColor};">${progressRate}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progressRate}%; background: ${barColor};"></div>
+              </div>
+            </div>
+            
+            ${totalSub > 0 ? `
+              <div class="grid grid-cols-3 gap-1 pt-2 border-t border-slate-700/50">
+                <div class="text-center">
+                  <div class="timeline-label">📋 Total</div>
+                  <div class="timeline-value text-sm">${totalSub}</div>
+                </div>
+                <div class="text-center">
+                  <div class="timeline-label">✅ Concluídas</div>
+                  <div class="timeline-value text-sm" style="color: #22c55e;">${completedSub}</div>
+                </div>
+                <div class="text-center">
+                  <div class="timeline-label">🔄 Em Prog.</div>
+                  <div class="timeline-value text-sm" style="color: #eab308;">${inProgressSub}</div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
       });
 
-      document.getElementById('dashboard-content').innerHTML = dashboardHTML || '<p class="text-xs text-slate-500 text-center py-4">Nenhuma atividade atrasada ou próxima</p>';
+      dashboardContainer.innerHTML = dashboardHTML;
     }
 
-    window.togglePlan = togglePlan;
-    window.highlightActivityRow = highlightActivityRow;
-    window.unhighlightActivityRow = unhighlightActivityRow;
+    function getTimelineData() {
+      const visibleTasks = tasks.filter(t => t.visivel !== false);
+      const visibleMilestones = [];
+      
+      if (!hideMilestonesPlanned) {
+        visibleMilestones.push(...milestones.filter(m => !m.data_realizada));
+      }
+      if (!hideMilestonesActual) {
+        visibleMilestones.push(...milestones.filter(m => m.data_realizada));
+      }
+      
+      const allDates = [
+        ...visibleTasks.map(t => new Date(t.inicio).getTime()),
+        ...visibleTasks.map(t => new Date(t.fim).getTime()),
+        ...visibleMilestones.map(m => new Date(m.data_prevista).getTime()),
+        ...visibleMilestones.filter(m => m.data_realizada).map(m => new Date(m.data_realizada).getTime())
+      ];
+      
+      if (allDates.length === 0) return { dates: [], minDate: null, maxDate: null };
+
+      // FIX: Strictly align with 1st day of earliest month found
+      const earliestRaw = new Date(Math.min(...allDates));
+      const minDate = new Date(earliestRaw.getFullYear(), earliestRaw.getMonth(), 1); 
+      
+      // End date buffer
+      const maxDate = new Date(Math.max(...allDates));
+      maxDate.setDate(maxDate.getDate() + 15); // Small buffer at end
+
+      let dates = [];
+
+      // Logic for Months/Elapsed is similar (monthly buckets)
+      let current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+      let monthIndex = 0;
+      
+      while (current <= maxDate) {
+        let label = '';
+        if (viewMode === 'months') {
+            label = current.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        } else {
+            // Elapsed months: Mês 01, Mês 02...
+            monthIndex++;
+            label = `Mês ${monthIndex.toString().padStart(2, '0')}`;
+        }
+
+        dates.push({
+          date: new Date(current),
+          label: label
+        });
+        current.setMonth(current.getMonth() + 1);
+      }
+
+      return { dates, minDate, maxDate };
+    }
+
+    function getDayCount(task) {
+      // Both modes use monthly sizing
+      const start = new Date(task.inicio);
+      const end = new Date(task.fim);
+      // Rough calc for bar width in months
+      return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+    }
+
+    function getTaskStart(task, minDate) {
+      // Both modes use monthly positioning
+      const start = new Date(task.inicio);
+      const minDate2 = new Date(minDate);
+      return (start.getFullYear() - minDate2.getFullYear()) * 12 + (start.getMonth() - minDate2.getMonth());
+    }
+
+    function renderGantt() {
+      const container = document.getElementById('gantt-chart');
+      const visibleTasks = tasks.filter(t => t.visivel !== false);
+      
+      const visibleMilestones = [];
+      if (!hideMilestonesPlanned) {
+        visibleMilestones.push(...milestones.filter(m => !m.data_realizada));
+      }
+      if (!hideMilestonesActual) {
+        visibleMilestones.push(...milestones.filter(m => m.data_realizada));
+      }
+      
+      if (visibleTasks.length === 0 && visibleMilestones.length === 0) {
+        container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm"><p>Adicione tarefas para gerar o gráfico</p></div>';
+        return;
+      }
+
+      const tlData = getTimelineData();
+      timelineData = tlData;
+      const { dates, minDate, maxDate } = tlData;
+      const dayWidth = 50; // Fixed width for months columns
+      const rowHeight = 60;
+      const labelWidth = 180;
+      
+      const taskMilestonesMap = {};
+      visibleMilestones.forEach(m => {
+        if (!taskMilestonesMap[m.tarefa_id]) taskMilestonesMap[m.tarefa_id] = [];
+        taskMilestonesMap[m.tarefa_id].push(m);
+      });
+      
+      let html = `
+        <div class="relative gantt-container" style="min-width: ${labelWidth + dates.length * dayWidth}px;">
+          <div class="flex sticky top-0 z-10" style="background: ${config.surface_color};">
+            <div class="flex-shrink-0 p-2 font-semibold border-b border-r border-slate-600 text-xs" style="width: ${labelWidth}px; color: ${config.primary_action};">
+              Tarefa
+            </div>
+            <div class="flex border-b border-slate-600">
+      `;
+      
+      dates.forEach((item) => {
+        html += `
+          <div class="text-center text-xs p-1 border-r border-slate-700 flex items-center justify-center" style="width: ${dayWidth}px;">
+            <div class="font-medium" style="color: ${config.text_color};">${item.label}</div>
+          </div>
+        `;
+      });
+      
+      html += `</div></div>`;
+      
+      const principalTasks = visibleTasks.filter(t => t.nivel === 'principal');
+      
+      principalTasks.forEach((task, idx) => {
+        const startOffset = getTaskStart(task, minDate);
+        const duration = getDayCount(task);
+        const barLeft = startOffset * dayWidth;
+        const barWidth = duration * dayWidth;
+        const barColor = barColors[idx % barColors.length];
+        
+        const subtasks = visibleTasks.filter(t => t.tarefa_pai === task.id);
+        const taskMilestones = taskMilestonesMap[task.id] || [];
+        
+        html += `
+          <div class="flex items-center relative" style="height: ${rowHeight}px; border-bottom: 2px solid ${barColor}40;">
+            <div class="flex-shrink-0 p-2 border-r border-slate-700 text-xs font-bold" style="width: ${labelWidth}px; color: ${barColor};">
+              <div>🎯 ${task.tarefa}</div>
+              ${task.tags ? `<div class="text-slate-400 font-normal text-xs mt-1">${task.tags}</div>` : ''}
+            </div>
+            <div class="relative flex-1" style="height: ${rowHeight}px;">
+              <div class="absolute inset-0 flex">
+                ${dates.map((item) => {
+                  return `<div class="border-r border-slate-700/30" style="width: ${dayWidth}px;"></div>`;
+                }).join('')}
+              </div>
+              
+              <div class="gantt-bar absolute top-3 bottom-3 rounded-lg shadow-lg" style="left: ${barLeft}px; width: ${barWidth}px; background: ${barColor}20; border: 2px solid ${barColor};" onmousedown="startBarDrag(event, '${task.id}', true)" ondblclick="event.stopPropagation()">
+                <div class="absolute inset-0 rounded-md" style="width: ${task.progresso}%; background: ${barColor};"></div>
+                <div style="position: relative; z-index: 10; padding: 0 4px; font-size: 10px; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); display: flex; align-items: center; height: 100%;">${task.progresso}%</div>
+                <div class="absolute -top-6 left-0 right-0 h-5 cursor-ew-resize" style="background: rgba(99, 102, 241, 0.1); border-top: 1px dashed ${barColor};" title="Arraste para ajustar inicio"></div>
+                <div class="absolute -bottom-6 left-0 right-0 h-5 cursor-ew-resize" style="background: rgba(99, 102, 241, 0.1); border-bottom: 1px dashed ${barColor};" title="Arraste para ajustar fim"></div>
+              </div>
+              
+              ${taskMilestones.map(milestone => {
+                const plannedDate = new Date(milestone.data_prevista);
+                const actualDate = milestone.data_realizada ? new Date(milestone.data_realizada) : null;
+                
+                let plannedOffset = 0;
+                let actualOffset = 0;
+                let daysDiff = 0;
+                
+                // Calculo de posição do marco (sempre mensal)
+                const calcOffset = (date) => {
+                    return ((date.getFullYear() - minDate.getFullYear()) * 12 + (date.getMonth() - minDate.getMonth())) * dayWidth;
+                };
+
+                plannedOffset = calcOffset(plannedDate);
+                
+                if (actualDate) {
+                    actualOffset = calcOffset(actualDate);
+                    daysDiff = Math.floor((actualDate - plannedDate) / (1000 * 60 * 60 * 24));
+                }
+                
+                let result = '';
+                
+                if (actualDate) {
+                  result += `<div class="milestone-overlay" style="left: ${actualOffset}px; background: rgba(168, 85, 247, 0.6); box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);"></div>`;
+                }
+                
+                if (!hideMilestonesPlanned) {
+                  result += `<div class="milestone-planned" style="left: ${plannedOffset}px;"></div>`;
+                }
+                
+                if (actualDate && !hideMilestonesPlanned) {
+                  const minOffset = Math.min(plannedOffset, actualOffset);
+                  const maxOffset = Math.max(plannedOffset, actualOffset);
+                  const width = maxOffset - minOffset;
+                  if (width > 0) {
+                    const badgeLeft = minOffset + width / 2;
+                    const badgeBg = daysDiff > 0 ? 'rgba(239, 68, 68, 0.85)' : daysDiff < 0 ? 'rgba(34, 197, 94, 0.85)' : 'rgba(59, 130, 246, 0.85)';
+                    const badgeText = daysDiff > 0 ? `+${daysDiff}d` : daysDiff < 0 ? `${daysDiff}d` : '0d';
+                    const badgeIcon = daysDiff > 0 ? '⚠️' : daysDiff < 0 ? '🚀' : '✅';
+                    
+                    result += `<div class="milestone-overlay" style="left: ${minOffset}px; width: ${width}px; background: rgba(168, 85, 247, 0.4); box-shadow: 0 0 8px rgba(168, 85, 247, 0.3); border-radius: 2px;"></div>`;
+                    result += `<div class="milestone-name-badge" style="left: ${badgeLeft}px; top: 2px;">📍 ${milestone.tarefa}</div>`;
+                    result += `<div style="position: absolute; left: ${badgeLeft}px; top: -18px; background: ${badgeBg}; color: white; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 15; border: 1px solid rgba(255,255,255,0.2); transform: translateX(-50%);">${badgeIcon} ${badgeText}</div>`;
+                  }
+                }
+                
+                return result;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        
+        subtasks.forEach((subTask, subIdx) => {
+          const subStartOffset = getTaskStart(subTask, minDate);
+          const subDuration = getDayCount(subTask);
+          const subBarLeft = subStartOffset * dayWidth;
+          const subBarWidth = subDuration * dayWidth;
+          const subBarColor = barColors[(idx * 2 + subIdx + 1) % barColors.length];
+          
+          html += `
+            <div class="flex items-center" style="height: ${rowHeight * 0.85}px; border-bottom: 1px solid rgba(71, 85, 105, 0.3);">
+              <div class="flex-shrink-0 p-2 border-r border-slate-700 text-xs" style="width: ${labelWidth}px; margin-left: 15px; color: ${subBarColor};">
+                📌 ${subTask.tarefa}
+              </div>
+              <div class="relative flex-1" style="height: ${rowHeight * 0.85}px;">
+                <div class="gantt-bar absolute top-2 bottom-2 rounded shadow" style="left: ${subBarLeft}px; width: ${subBarWidth}px; background: ${subBarColor}25; border: 1.5px solid ${subBarColor};" onmousedown="startBarDrag(event, '${subTask.id}', true)" ondblclick="event.stopPropagation()">
+                  <div class="absolute inset-0 rounded" style="width: ${subTask.progresso}%; background: ${subBarColor};"></div>
+                  <div style="position: relative; z-index: 10; padding: 0 4px; font-size: 9px; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); display: flex; align-items: center; height: 100%;">${subTask.progresso}%</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      });
+      
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // Inicialização
+    initApp();
+    applyConfig();
   </script>
  </body>
 </html>
